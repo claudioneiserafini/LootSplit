@@ -1,1147 +1,1608 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loot Split • Albion Online</title>
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#141a24">
-<style>
-  :root {
-    --bg: #141a24;
-    --panel: #1c2431;
-    --panel-2: #252f40;
-    --line: #323f55;
-    --text: #e4e8ef;
-    --muted: #8f9db3;
-    --silver: #d7dde8;
-    --brass: #d3a84c;
-    --brass-soft: rgba(211, 168, 76, .14);
-    --ok: #6cc48f;
-    --warn: #e0a458;
-    --danger: #e06c6c;
-    --r: 12px;
-    --serif: Georgia, "Times New Roman", serif;
-  }
-  * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
-  html { -webkit-text-size-adjust: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh;
-    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 1000px; margin: 0 auto; padding: 22px 16px 24px; min-height: 100vh; display: flex; flex-direction: column; }
-  .layout { flex: 1; width: 100%; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 22px; align-items: start; }
-  .content { min-width: 0; }
-  .content.swap { animation: viewIn .25s ease; }
-  .ctx { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-  .ctx h2 { margin: 0; font: 700 1.35rem/1.2 var(--serif); color: var(--silver); }
-  .ctx span { color: var(--muted); font-size: .85rem; }
+  <!DOCTYPE html>
+  <html lang="pt-BR">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loot Split • Albion Online</title>
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#141a24">
+  <style>
+    :root {
+      --bg: #141a24;
+      --panel: #1c2431;
+      --panel-2: #252f40;
+      --line: #323f55;
+      --text: #e4e8ef;
+      --muted: #8f9db3;
+      --silver: #d7dde8;
+      --brass: #d3a84c;
+      --brass-soft: rgba(211, 168, 76, .14);
+      --ok: #6cc48f;
+      --warn: #e0a458;
+      --danger: #e06c6c;
+      --r: 12px;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh;
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 22px 16px 24px; min-height: 100vh; display: flex; flex-direction: column; }
+    .layout { flex: 1; width: 100%; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 22px; align-items: start; }
+    .content { min-width: 0; }
+    .content.swap { animation: viewIn .25s ease; }
+    .ctx { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .ctx h2 { margin: 0; font: 700 1.35rem/1.2 var(--serif); color: var(--silver); }
+    .ctx span { color: var(--muted); font-size: .85rem; }
 
-  /* Menu lateral dos splits */
-  .side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 10px; }
-  .side-h { padding: 0 4px; font: 650 .95rem var(--serif); color: var(--silver); }
-  .splitnav { display: flex; flex-direction: column; gap: 6px; }
-  .sp { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; gap: 0 8px; align-items: center; text-align: left;
-    padding: 10px 12px 10px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; color: var(--text); font-weight: 400; }
-  .sp::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brass);
-    transform: scaleY(0); transition: transform .25s; }
-  .sp:hover { border-color: #4b5b78; }
-  .sp.active { background: var(--panel-2); border-color: #4b5b78; }
-  .sp.active::before { transform: scaleY(1); }
-  .sp-name { font-weight: 650; }
-  .sp-amt { color: var(--brass); font: 700 .85rem var(--serif); font-variant-numeric: tabular-nums; }
-  .sp-meta { grid-column: 1 / -1; color: var(--muted); font-size: .78rem; }
-  .side-act { display: flex; flex-direction: column; gap: 6px; }
-  .side-total { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 8px 4px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
-  .side-total b { font: 700 .95rem var(--serif); color: var(--silver); font-variant-numeric: tabular-nums; }
-  @media (max-width: 800px) {
-    .layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-    .side { position: static; }
-    .splitnav { flex-direction: row; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
-    .splitnav::-webkit-scrollbar { display: none; }
-    .sp { flex: 0 0 auto; min-width: 128px; }
-    .sp::before { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 3px; transform: scaleX(0); }
-    .sp.active::before { transform: scaleX(1); }
-    .side-act { flex-direction: row; }
-    .side-total { display: none; }
-  }
+    /* Menu lateral dos splits */
+    .side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .side-h { padding: 0 4px; font: 650 .95rem var(--serif); color: var(--silver); }
+    .splitnav { display: flex; flex-direction: column; gap: 6px; }
+    .sp { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; gap: 0 8px; align-items: center; text-align: left;
+      padding: 10px 12px 10px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; color: var(--text); font-weight: 400; }
+    .sp::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brass);
+      transform: scaleY(0); transition: transform .25s; }
+    .sp:hover { border-color: #4b5b78; }
+    .sp.active { background: var(--panel-2); border-color: #4b5b78; }
+    .sp.active::before { transform: scaleY(1); }
+    .sp-name { font-weight: 650; }
+    .sp-amt { color: var(--brass); font: 700 .85rem var(--serif); font-variant-numeric: tabular-nums; }
+    .sp-meta { grid-column: 1 / -1; color: var(--muted); font-size: .78rem; }
+    .side-act { display: flex; flex-direction: column; gap: 6px; }
+    .side-total { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 8px 4px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+    .side-total b { font: 700 .95rem var(--serif); color: var(--silver); font-variant-numeric: tabular-nums; }
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      .side { position: static; }
+      .splitnav { flex-direction: row; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+      .splitnav::-webkit-scrollbar { display: none; }
+      .sp { flex: 0 0 auto; min-width: 128px; }
+      .sp::before { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 3px; transform: scaleX(0); }
+      .sp.active::before { transform: scaleX(1); }
+      .side-act { flex-direction: row; }
+      .side-total { display: none; }
+    }
 
 
-  /* Cabeçalho */
-  .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-  .brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-  h1 { margin: 0; font: 700 1.55rem/1.2 var(--serif); color: var(--silver); }
-  .game { color: var(--brass); font-size: .95rem; font-weight: 600; }
-  .saved { color: var(--muted); font-size: .8rem; display: flex; align-items: center; gap: 6px; }
-  .saved::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+    /* Gaveta direita: membros da guilda */
+    .gback { position: fixed; inset: 0; z-index: 8; background: rgba(8, 11, 17, .6); animation: fade .18s ease; }
+    .gdrawer { position: fixed; top: 0; bottom: 0; right: 0; z-index: 9; width: min(440px, 100vw); overflow-y: auto; overscroll-behavior: contain;
+      background: var(--bg); border-left: 1px solid var(--line); padding: 16px; box-shadow: -20px 0 60px rgba(0, 0, 0, .45);
+      transform: translateX(102%); visibility: hidden; transition: transform .28s cubic-bezier(.3, .8, .3, 1), visibility 0s .28s; }
+    .gdrawer.open { transform: none; visibility: visible; transition: transform .28s cubic-bezier(.3, .8, .3, 1); }
+    .gd-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font: 700 1.1rem var(--serif); color: var(--silver); }
+    .gdrawer .card { background: none; border: 0; padding: 0; }
+    .gdrawer .picklist { max-height: 55vh; }
+    .coin { display: grid; place-items: center; }
+    .coin:hover { color: var(--brass); border-color: var(--brass); }
+    .coin svg { width: 17px; height: 17px; }
+    .gman { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 14px; }
+    .dlg.wide { max-height: 92vh; overflow-y: auto; }
 
-  /* Contadores */
-  .stats { display: grid; grid-template-columns: 1.7fr repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
-  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 11px 14px; min-width: 0; }
-  .stat small { display: block; color: var(--muted); font-size: .76rem; line-height: 1.3; }
-  .stat b { font: 700 1.2rem/1.35 var(--serif); color: var(--silver); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-  .stat.hero b { font-size: 1.85rem; color: var(--brass); }
-  @media (max-width: 700px) { .stats { grid-template-columns: 1fr 1fr; } .stat.hero { grid-column: 1 / -1; } }
+    /* Cabeçalho */
+    .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    h1 { margin: 0; font: 700 1.55rem/1.2 var(--serif); color: var(--silver); }
+    .game { color: var(--brass); font-size: .95rem; font-weight: 600; }
+    .saved { color: var(--muted); font-size: .8rem; display: flex; align-items: center; gap: 6px; }
+    .saved::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
 
-  /* Menu */
-  .tabs { position: relative; display: flex; gap: 4px; background: var(--panel); border: 1px solid var(--line);
-    border-radius: var(--r); padding: 4px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
-  .tabs::-webkit-scrollbar { display: none; }
-  .ind { position: absolute; top: 4px; bottom: 4px; left: 0; width: 0; background: var(--panel-2); border-radius: 9px;
-    box-shadow: inset 0 -2px 0 var(--brass); transition: transform .3s cubic-bezier(.3, .8, .3, 1), width .3s cubic-bezier(.3, .8, .3, 1); }
-  .tab { position: relative; z-index: 1; flex: 1 0 auto; display: flex; align-items: center; justify-content: center; gap: 8px;
-    background: none; border: 0; color: var(--muted); padding: 10px 14px; border-radius: 9px; font: inherit; font-weight: 600;
-    white-space: nowrap; cursor: pointer; transition: color .2s; }
-  .tab:hover, .tab[aria-selected="true"] { color: var(--text); }
-  .badge { font-size: .72rem; line-height: 1.5; background: var(--panel-2); color: var(--muted); padding: 0 7px; border-radius: 99px; transition: background .2s, color .2s; }
-  .tab[aria-selected="true"] .badge { background: var(--brass); color: #211a08; }
+    /* Contadores */
+    .stats { display: grid; grid-template-columns: 1.7fr repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 11px 14px; min-width: 0; }
+    .stat small { display: block; color: var(--muted); font-size: .76rem; line-height: 1.3; }
+    .stat b { font: 700 1.2rem/1.35 var(--serif); color: var(--silver); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .stat.hero b { font-size: 1.85rem; color: var(--brass); }
+    @media (max-width: 700px) { .stats { grid-template-columns: 1fr 1fr; } .stat.hero { grid-column: 1 / -1; } }
 
-  .view { animation: viewIn .25s ease; }
-  @keyframes viewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    /* Menu */
+    .tabs { position: relative; display: flex; gap: 4px; background: var(--panel); border: 1px solid var(--line);
+      border-radius: var(--r); padding: 4px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .ind { position: absolute; top: 4px; bottom: 4px; left: 0; width: 0; background: var(--panel-2); border-radius: 9px;
+      box-shadow: inset 0 -2px 0 var(--brass); transition: transform .3s cubic-bezier(.3, .8, .3, 1), width .3s cubic-bezier(.3, .8, .3, 1); }
+    .tab { position: relative; z-index: 1; flex: 1 0 auto; display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: none; border: 0; color: var(--muted); padding: 10px 14px; border-radius: 9px; font: inherit; font-weight: 600;
+      white-space: nowrap; cursor: pointer; transition: color .2s; }
+    .tab:hover, .tab[aria-selected="true"] { color: var(--text); }
+    .badge { font-size: .72rem; line-height: 1.5; background: var(--panel-2); color: var(--muted); padding: 0 7px; border-radius: 99px; transition: background .2s, color .2s; }
+    .tab[aria-selected="true"] .badge { background: var(--brass); color: #211a08; }
 
-  /* Cards e formulários */
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; }
-  .card + .card { margin-top: 14px; }
-  h2 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 650; color: var(--silver); }
-  .lead { margin: 0 0 14px; color: var(--muted); font-size: .9rem; }
-  .stack { display: grid; gap: 14px; }
-  .f { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; color: var(--muted); min-width: 0; }
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 520px) { .two { grid-template-columns: 1fr; } }
-  input[type=text], select, textarea { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--text);
-    border-radius: 9px; padding: 11px 12px; font: inherit; min-width: 0; transition: border-color .2s; }
-  input::placeholder, textarea::placeholder { color: #566480; }
-  input:hover, select:hover, textarea:hover { border-color: #4b5b78; }
-  .amount input { font: 600 1.3rem/1.3 var(--serif); padding: 13px 14px; }
-  textarea { min-height: 88px; resize: vertical; font: .85rem/1.4 ui-monospace, Menlo, Consolas, monospace; }
-  input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, summary:focus-visible {
-    outline: 2px solid var(--brass); outline-offset: 2px; }
+    .view { animation: viewIn .25s ease; }
+    @keyframes viewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-  button { font: inherit; font-weight: 600; cursor: pointer; border-radius: 9px; border: 1px solid var(--line);
-    background: var(--panel-2); color: var(--text); padding: 10px 16px; transition: transform .12s, border-color .2s, filter .2s, background .2s; }
-  button:hover { border-color: #5a6c8c; }
-  button:active { transform: scale(.97); }
-  button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-  button.primary { background: var(--brass); color: #211a08; border-color: var(--brass); }
-  button.primary:hover { filter: brightness(1.08); }
-  button.big { padding: 13px 16px; font-size: 1.05rem; width: 100%; }
-  button.small { padding: 7px 12px; font-size: .85rem; }
-  button.danger { color: var(--danger); }
-  button.danger:hover { border-color: var(--danger); background: rgba(224, 108, 108, .08); }
-  .bar { display: flex; gap: 8px; flex-wrap: wrap; }
-  .inline { display: flex; gap: 8px; }
-  .inline input { flex: 1; }
-  .msg { margin: 10px 0 0; min-height: 1.3em; font-size: .88rem; color: var(--warn); }
-  .msg:empty { display: none; }
+    /* Cards e formulários */
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; }
+    .card + .card { margin-top: 14px; }
+    h2 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 650; color: var(--silver); }
+    .lead { margin: 0 0 14px; color: var(--muted); font-size: .9rem; }
+    .stack { display: grid; gap: 14px; }
+    .f { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; color: var(--muted); min-width: 0; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 520px) { .two { grid-template-columns: 1fr; } }
+    input[type=text], select, textarea { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--text);
+      border-radius: 9px; padding: 11px 12px; font: inherit; min-width: 0; transition: border-color .2s; }
+    input::placeholder, textarea::placeholder { color: #566480; }
+    input:hover, select:hover, textarea:hover { border-color: #4b5b78; }
+    .amount input { font: 600 1.3rem/1.3 var(--serif); padding: 13px 14px; }
+    textarea { min-height: 88px; resize: vertical; font: .85rem/1.4 ui-monospace, Menlo, Consolas, monospace; }
+    input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, summary:focus-visible {
+      outline: 2px solid var(--brass); outline-offset: 2px; }
 
-  /* Reparo (abre e fecha) */
-  .toggle { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; background: none; border: 0; padding: 4px 0;
-    color: var(--brass); font-size: .92rem; }
-  .toggle:hover { filter: brightness(1.15); }
-  .plus { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--brass);
-    line-height: 1; transition: transform .25s; }
-  .toggle[aria-expanded="true"] .plus { transform: rotate(45deg); }
-  .collapse { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .28s ease; }
-  .collapse.open { grid-template-rows: 1fr; }
-  .collapse > .inner { overflow: hidden; min-height: 0; visibility: hidden; transition: visibility 0s .28s; }
-  .collapse.open > .inner { visibility: visible; transition-delay: 0s; }
-  .collapse .stack { padding: 4px 4px 6px; }
+    button { font: inherit; font-weight: 600; cursor: pointer; border-radius: 9px; border: 1px solid var(--line);
+      background: var(--panel-2); color: var(--text); padding: 10px 16px; transition: transform .12s, border-color .2s, filter .2s, background .2s; }
+    button:hover { border-color: #5a6c8c; }
+    button:active { transform: scale(.97); }
+    button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    button.primary { background: var(--brass); color: #211a08; border-color: var(--brass); }
+    button.primary:hover { filter: brightness(1.08); }
+    button.big { padding: 13px 16px; font-size: 1.05rem; width: 100%; }
+    button.small { padding: 7px 12px; font-size: .85rem; }
+    button.danger { color: var(--danger); }
+    button.danger:hover { border-color: var(--danger); background: rgba(224, 108, 108, .08); }
+    .bar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .inline { display: flex; gap: 8px; }
+    .inline input { flex: 1; min-width: 0; }
+    .iconbtn { flex: none; width: 42px; padding: 0; display: grid; place-items: center; }
+    .iconbtn svg { width: 20px; height: 20px; }
+    .iconbtn:hover { color: var(--brass); border-color: var(--brass); }
+    .msg { margin: 10px 0 0; min-height: 1.3em; font-size: .88rem; color: var(--warn); }
+    .msg:empty { display: none; }
 
-  /* Prévia e resultado */
-  .preview { margin-top: 14px; min-height: 96px; display: flex; flex-direction: column; justify-content: center; }
-  .pv-hint { margin: 0; color: var(--muted); }
-  .pv-big b { display: block; font: 700 2.1rem/1.15 var(--serif); color: var(--brass); font-variant-numeric: tabular-nums; }
-  .pv-big span { color: var(--muted); }
-  .pv-lines { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; color: var(--muted); font-size: .88rem; }
-  .result { margin-top: 14px; border-color: var(--brass); background: var(--brass-soft); }
-  .result b { font: 700 1.5rem/1.2 var(--serif); color: var(--brass); }
-  .result p { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
-  .pop { animation: pop .45s cubic-bezier(.2, .9, .3, 1.2); }
-  @keyframes pop { from { transform: scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+    /* Reparo (abre e fecha) */
+    .toggle { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; background: none; border: 0; padding: 4px 0;
+      color: var(--brass); font-size: .92rem; }
+    .toggle:hover { filter: brightness(1.15); }
+    .plus { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--brass);
+      line-height: 1; transition: transform .25s; }
+    .toggle[aria-expanded="true"] .plus { transform: rotate(45deg); }
+    .collapse { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .28s ease; }
+    .collapse.open { grid-template-rows: 1fr; }
+    .collapse > .inner { overflow: hidden; min-height: 0; visibility: hidden; transition: visibility 0s .28s; }
+    .collapse.open > .inner { visibility: visible; transition-delay: 0s; }
+    .collapse .stack { padding: 4px 4px 6px; }
 
-  /* Jogadores */
-  .members { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
-  .m { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--bg); border: 1px solid var(--line);
-    border-radius: 10px; padding: 10px 12px; transition: border-color .2s, opacity .25s; }
-  .m:hover { border-color: #4b5b78; }
-  .m.paused { opacity: .6; border-style: dashed; }
-  .av { width: 38px; height: 38px; flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; }
-  .info { flex: 1 1 130px; min-width: 0; }
-  .nick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 650; overflow-wrap: anywhere; }
-  .pill { font-size: .7rem; font-weight: 600; padding: 1px 8px; border-radius: 99px; }
-  .pill.on { background: #1d3a2b; color: var(--ok); }
-  .pill.off { background: #3a2f14; color: var(--brass); }
-  .meta { color: var(--muted); font-size: .78rem; }
-  .bal { font: 700 1.1rem/1.2 var(--serif); color: var(--brass); font-variant-numeric: tabular-nums; min-width: 70px; text-align: right; }
-  .switch { width: 44px; height: 24px; padding: 0; border-radius: 99px; position: relative; flex: none; }
-  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
-    background: var(--muted); transition: transform .2s, background .2s; }
-  .switch[aria-checked="true"] { background: #1d3a2b; border-color: #2f6a4b; }
-  .switch[aria-checked="true"]::after { transform: translateX(20px); background: var(--ok); }
-  .x { width: 30px; height: 30px; padding: 0; font-size: 1.15rem; line-height: 1; border-radius: 8px; background: none; color: var(--muted); }
-  .x:hover { color: var(--danger); border-color: var(--danger); }
-  .fresh { animation: slideIn .4s ease, flash 1.4s ease; }
-  @keyframes slideIn { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
-  @keyframes flash { from { background-color: rgba(211, 168, 76, .28); } }
+    /* Prévia e resultado */
+    .preview { margin-top: 14px; min-height: 96px; display: flex; flex-direction: column; justify-content: center; }
+    .pv-hint { margin: 0; color: var(--muted); }
+    .pv-big b { display: block; font: 700 2.1rem/1.15 var(--serif); color: var(--brass); font-variant-numeric: tabular-nums; }
+    .pv-big span { color: var(--muted); }
+    .pv-lines { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; color: var(--muted); font-size: .88rem; }
+    .result { margin-top: 14px; border-color: var(--brass); background: var(--brass-soft); }
+    .result b { font: 700 1.5rem/1.2 var(--serif); color: var(--brass); }
+    .result p { margin: 4px 0 0; color: var(--muted); font-size: .9rem; }
+    .pop { animation: pop .45s cubic-bezier(.2, .9, .3, 1.2); }
+    @keyframes pop { from { transform: scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
 
-  /* Histórico */
-  .hist { display: grid; gap: 8px; margin-top: 14px; }
-  details.entry { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; transition: border-color .2s; }
-  details.entry:hover, details.entry[open] { border-color: #4b5b78; }
-  details.entry summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px 14px; font-variant-numeric: tabular-nums; }
-  details.entry summary::-webkit-details-marker { display: none; }
-  .no { font: 700 1rem/1 var(--serif); color: var(--silver); }
-  .time { flex: 1; color: var(--muted); font-size: .82rem; }
-  .amt { color: var(--silver); }
-  .each { color: var(--brass); font-weight: 600; font-size: .9rem; }
-  .chev { color: var(--muted); transition: transform .2s; }
-  details[open] .chev { transform: rotate(90deg); }
-  .body { padding: 0 14px 14px; color: var(--muted); font-size: .88rem; display: grid; gap: 4px; animation: viewIn .2s ease; }
-  .empty { margin: 16px 0 0; color: var(--muted); font-size: .92rem; text-align: center; padding: 18px 0 6px; }
+    /* Jogadores */
+    .members { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+    .m { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--bg); border: 1px solid var(--line);
+      border-radius: 10px; padding: 10px 12px; transition: border-color .2s, opacity .25s; }
+    .m:hover { border-color: #4b5b78; }
+    .m.paused { opacity: .6; border-style: dashed; }
+    .av { width: 38px; height: 38px; flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; }
+    .info { flex: 1 1 130px; min-width: 0; }
+    .nick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 650; overflow-wrap: anywhere; }
+    .pill { font-size: .7rem; font-weight: 600; padding: 1px 8px; border-radius: 99px; }
+    .pill.on { background: #1d3a2b; color: var(--ok); }
+    .pill.off { background: #3a2f14; color: var(--brass); }
+    .meta { color: var(--muted); font-size: .78rem; }
+    .bal { font: 700 1.1rem/1.2 var(--serif); color: var(--brass); font-variant-numeric: tabular-nums; min-width: 70px; text-align: right; }
+    .switch { width: 44px; height: 24px; padding: 0; border-radius: 99px; position: relative; flex: none; }
+    .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--muted); transition: transform .2s, background .2s; }
+    .switch[aria-checked="true"] { background: #1d3a2b; border-color: #2f6a4b; }
+    .switch[aria-checked="true"]::after { transform: translateX(20px); background: var(--ok); }
+    .x { width: 30px; height: 30px; padding: 0; font-size: 1.15rem; line-height: 1; border-radius: 8px; background: none; color: var(--muted); }
+    .x:hover { color: var(--danger); border-color: var(--danger); }
+    .fresh { animation: slideIn .4s ease, flash 1.4s ease; }
+    @keyframes slideIn { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @keyframes flash { from { background-color: rgba(211, 168, 76, .28); } }
 
-  /* Compartilhar */
-  .opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .opts.two { grid-template-columns: 1fr 1fr; }
-  @media (max-width: 620px) { .opts, .opts.two { grid-template-columns: 1fr; } }
-  .opt { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; background: var(--bg); border: 1px solid var(--line);
-    border-radius: 10px; padding: 12px; transition: border-color .2s; }
-  .opt:hover { border-color: #4b5b78; }
-  .opt span { color: var(--muted); font-size: .84rem; flex: 1; }
-  .opt button { margin-top: 6px; }
+    /* Histórico */
+    .hist { display: grid; gap: 8px; margin-top: 14px; }
+    details.entry { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; transition: border-color .2s; }
+    details.entry:hover, details.entry[open] { border-color: #4b5b78; }
+    details.entry summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px 14px; font-variant-numeric: tabular-nums; }
+    details.entry summary::-webkit-details-marker { display: none; }
+    .no { font: 700 1rem/1 var(--serif); color: var(--silver); }
+    .time { flex: 1; color: var(--muted); font-size: .82rem; }
+    .amt { color: var(--silver); }
+    .each { color: var(--brass); font-weight: 600; font-size: .9rem; }
+    .chev { color: var(--muted); transition: transform .2s; }
+    details[open] .chev { transform: rotate(90deg); }
+    .body { padding: 0 14px 14px; color: var(--muted); font-size: .88rem; display: grid; gap: 4px; animation: viewIn .2s ease; }
+    .empty { margin: 16px 0 0; color: var(--muted); font-size: .92rem; text-align: center; padding: 18px 0 6px; }
 
-  .bar.end { justify-content: flex-end; }
-  button.danger-solid { background: var(--danger); border-color: var(--danger); color: #1f0b0b; }
-  button.danger-solid:hover { filter: brightness(1.08); }
+    /* Compartilhar */
+    .opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .opts.two { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 620px) { .opts, .opts.two { grid-template-columns: 1fr; } }
+    .opt { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; background: var(--bg); border: 1px solid var(--line);
+      border-radius: 10px; padding: 12px; transition: border-color .2s; }
+    .opt:hover { border-color: #4b5b78; }
+    .opt span { color: var(--muted); font-size: .84rem; flex: 1; }
+    .opt button { margin-top: 6px; }
+    .opt .bar { margin-top: 6px; }
+    .opt .bar button { margin-top: 0; }
 
-  /* Popup */
-  .modal { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px;
-    background: rgba(8, 11, 17, .72); animation: fade .18s ease; }
-  .dlg { width: 100%; max-width: 400px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, .5); animation: pop .25s cubic-bezier(.2, .9, .3, 1.1); }
-  .dlg h2 { font-size: 1.15rem; margin-bottom: 6px; }
-  .dlg p { margin: 0 0 16px; color: var(--muted); font-size: .93rem; }
-  .dlg textarea { margin-bottom: 16px; }
-  @keyframes fade { from { opacity: 0; } }
+    .bar.end { justify-content: flex-end; }
+    button.danger-solid { background: var(--danger); border-color: var(--danger); color: #1f0b0b; }
+    button.danger-solid:hover { filter: brightness(1.08); }
 
-  /* Cabeçalho de cartão que abre e fecha */
-  .head { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; background: none; border: 0;
-    padding: 0; text-align: left; color: inherit; border-radius: 8px; }
-  .head:hover { border: 0; filter: brightness(1.12); }
-  .head:active { transform: none; }
-  .head b { display: block; font-size: 1.05rem; color: var(--silver); }
-  .head small { display: block; color: var(--muted); font-size: .85rem; font-weight: 400; }
-  .head .chev { font-size: 1.4rem; line-height: 1; }
-  .head[aria-expanded="true"] .chev { transform: rotate(90deg); }
-  .collapse .stack.padtop { padding-top: 16px; }
+    /* Popup */
+    .modal { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px;
+      background: rgba(8, 11, 17, .72); animation: fade .18s ease; }
+    .dlg { width: 100%; max-width: 400px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .5); animation: pop .25s cubic-bezier(.2, .9, .3, 1.1); }
+    .dlg h2 { font-size: 1.15rem; margin-bottom: 6px; }
+    .dlg p { margin: 0 0 16px; color: var(--muted); font-size: .93rem; }
+    .dlg textarea { margin-bottom: 16px; }
+    @keyframes fade { from { opacity: 0; } }
 
-  /* Área de arquivo */
-  .drop { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 18px 14px;
-    border: 1.5px dashed var(--line); border-radius: 10px; cursor: pointer; color: var(--muted);
-    transition: border-color .2s, background .2s; }
-  .drop svg { width: 26px; height: 26px; color: var(--brass); transition: transform .2s; }
-  .drop b { color: var(--silver); font-size: .95rem; }
-  .drop small { font-size: .8rem; }
-  .drop:hover, .drop.over, .drop:focus-within { border-color: var(--brass); background: var(--brass-soft); }
-  .drop:hover svg, .drop.over svg { transform: translateY(-3px); }
-  .drop:focus-within { outline: 2px solid var(--brass); outline-offset: 2px; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    /* Cabeçalho de cartão que abre e fecha */
+    .head { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; background: none; border: 0;
+      padding: 0; text-align: left; color: inherit; border-radius: 8px; }
+    .head:hover { border: 0; filter: brightness(1.12); }
+    .head:active { transform: none; }
+    .head b { display: block; font-size: 1.05rem; color: var(--silver); }
+    .head small { display: block; color: var(--muted); font-size: .85rem; font-weight: 400; }
+    .head .chev { font-size: 1.4rem; line-height: 1; }
+    .head[aria-expanded="true"] .chev { transform: rotate(90deg); }
+    .collapse .stack.padtop { padding-top: 16px; }
 
-  /* Doações no histórico */
-  #donSection h2 { margin-top: 24px; }
-  .don { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--bg); border: 1px solid var(--line);
-    border-radius: 10px; padding: 10px 12px; }
+    /* Área de arquivo */
+    .drop { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 18px 14px;
+      border: 1.5px dashed var(--line); border-radius: 10px; cursor: pointer; color: var(--muted);
+      transition: border-color .2s, background .2s; }
+    .drop svg { width: 26px; height: 26px; color: var(--brass); transition: transform .2s; }
+    .drop b { color: var(--silver); font-size: .95rem; }
+    .drop small { font-size: .8rem; }
+    .drop:hover, .drop.over, .drop:focus-within { border-color: var(--brass); background: var(--brass-soft); }
+    .drop:hover svg, .drop.over svg { transform: translateY(-3px); }
+    .drop:focus-within { outline: 2px solid var(--brass); outline-offset: 2px; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  /* Rodapé */
-  .foot { margin-top: 40px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
-    color: #6b7a92; font-size: .78rem; }
-  .foot svg { width: 16px; height: 16px; color: var(--brass); flex: none; }
-  .foot b { color: var(--muted); font-weight: 600; }
-  .foot .sep { width: 1px; height: 12px; background: var(--line); }
-  @media (max-width: 520px) { .foot .sep { display: none; } .foot { gap: 6px 10px; } }
+    /* Puxar da guilda */
+    .divider { height: 1px; background: var(--line); }
+    .results { display: flex; flex-wrap: wrap; gap: 8px; }
+    .picklist { max-height: 320px; overflow-y: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
+    .pick { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; transition: background .15s; }
+    .pick:hover { background: var(--panel-2); }
+    .pick input { accent-color: var(--brass); width: 18px; height: 18px; flex: none; }
+    .pick.off { opacity: .5; cursor: default; }
+    .pick small { margin-left: auto; color: var(--muted); font-size: .78rem; }
 
-  .toast { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 10px); background: var(--panel-2); border: 1px solid var(--line);
-    padding: 9px 16px; border-radius: 9px; font-size: .9rem; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 5; }
-  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    /* Guilda */
+    .gh { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .gh h2 { margin: 0; font: 700 1.2rem/1.3 var(--serif); overflow-wrap: anywhere; }
+    .gh .lead { margin: 2px 0 0; }
+    .gctl { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 14px 0 8px; }
+    .gctl select { width: auto; }
+    .chk { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--muted); cursor: pointer; margin-bottom: 8px; }
+    .chk input { accent-color: var(--brass); width: 16px; height: 16px; }
+    .act { white-space: nowrap; }
+    .act.hot { color: var(--ok); }
+    .results.col { flex-direction: column; }
+    .gres { display: flex; flex-direction: column; align-items: flex-start; gap: 0; width: 100%; text-align: left; font-weight: 400; }
+    .gres b { font-weight: 650; overflow-wrap: anywhere; }
+    .gres small { color: var(--muted); font-size: .78rem; }
+    .dlg.wide { max-width: 460px; }
+    a.btn { display: inline-block; text-decoration: none; font-weight: 600; border: 1px solid var(--line); background: var(--panel-2);
+      color: var(--text); padding: 7px 12px; font-size: .85rem; border-radius: 9px; transition: border-color .2s; }
+    a.btn:hover { border-color: #5a6c8c; }
+    .note { margin: 14px 0 0; color: var(--muted); font-size: .82rem; }
 
-  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <header class="top">
-    <div class="brand"><h1>Loot Split</h1><span class="game">Albion Online</span></div>
-    <span class="saved">Salvo neste navegador</span>
-  </header>
+    /* Doações no histórico */
+    #donSection h2 { margin-top: 24px; }
+    .don { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--bg); border: 1px solid var(--line);
+      border-radius: 10px; padding: 10px 12px; }
 
-  <div class="layout">
-    <aside class="side" aria-label="Splits">
-      <div class="side-h">Splits</div>
-      <nav class="splitnav" id="splitNav"></nav>
-      <div class="side-act">
-        <button id="addSplit" class="small">+ Criar split</button>
-        <button id="delSplit" class="small danger" hidden>Remover</button>
-      </div>
-      <div class="side-total"><small>Total geral</small><b id="sAll">0</b></div>
-    </aside>
+    /* Rodapé */
+    .foot { margin-top: 40px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+      color: #6b7a92; font-size: .78rem; }
+    .foot svg { width: 16px; height: 16px; color: var(--brass); flex: none; }
+    .foot b { color: var(--muted); font-weight: 600; }
+    .foot .sep { width: 1px; height: 12px; background: var(--line); }
+    @media (max-width: 520px) { .foot .sep { display: none; } .foot { gap: 6px 10px; } }
 
-    <div class="content" id="content">
-  <div class="ctx"><h2 id="curSplit">Split 1#</h2><span>Cada split tem seus próprios jogadores e valores.</span></div>
+    .toast { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 10px); background: var(--panel-2); border: 1px solid var(--line);
+      padding: 9px 16px; border-radius: 9px; font-size: .9rem; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 5; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-  <section class="stats" aria-label="Resumo">
-    <div class="stat hero"><small>Prata distribuída</small><b id="sTotal">0</b></div>
-    <div class="stat"><small>Ativos</small><b id="sActive">0</b></div>
-    <div class="stat"><small>Pausados</small><b id="sPaused">0</b></div>
-    <div class="stat"><small>Sobra</small><b id="sCarry">0</b></div>
-    <div class="stat"><small>Reparo da guilda</small><b id="sGuild">0</b></div>
-  </section>
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+  </head>
+  <body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand"><h1>Loot Split</h1><span class="game">Albion Online</span></div>
+      <span class="saved">Salvo neste navegador</span>
+    </header>
 
-  <nav class="tabs" role="tablist" id="tabs" aria-label="Menu">
-    <span class="ind" id="ind"></span>
-    <button class="tab" role="tab" data-tab="split" aria-selected="true">Dividir</button>
-    <button class="tab" role="tab" data-tab="players" aria-selected="false">Jogadores <span class="badge" id="bPlayers">0</span></button>
-    <button class="tab" role="tab" data-tab="history" aria-selected="false">Histórico <span class="badge" id="bHistory">0</span></button>
-    <button class="tab" role="tab" data-tab="share" aria-selected="false">Dados</button>
-  </nav>
+    <div class="layout">
+      <aside class="side" aria-label="Splits">
+        <div class="side-h">Splits</div>
+        <nav class="splitnav" id="splitNav"></nav>
+        <div class="side-act">
+          <button id="addSplit" class="small">+ Criar split</button>
+          <button id="delSplit" class="small danger" hidden>Remover</button>
+        </div>
+        <div class="side-total"><small>Total geral</small><b id="sAll">0</b></div>
+      </aside>
 
-  <main>
-    <!-- Dividir -->
-    <section class="view" id="view-split" role="tabpanel">
-      <div class="card">
-        <h2>Nova divisão</h2>
-        <p class="lead">Quem estiver ativo na hora recebe a parte.</p>
-        <form class="stack" id="lootForm" autocomplete="off">
-          <label class="f amount">Prata do conteúdo
-            <input type="text" id="amount" inputmode="decimal" placeholder="1.500.000 ou 1.5m ou 250k" required>
-          </label>
-          <button type="button" class="toggle" id="repairToggle" aria-expanded="false" aria-controls="repairBox">
-            <span class="plus" aria-hidden="true">+</span><span id="repairLabel">Adicionar reparo</span>
-          </button>
-          <div class="collapse" id="repairBox"><div class="inner"><div class="stack">
-            <div class="two">
-              <label class="f">Reparo (prata)
-                <input type="text" id="repair" inputmode="decimal" placeholder="ex: 250k">
-              </label>
-              <label class="f">Quem pagou
-                <select id="payerType">
-                  <option value="guild">Guilda</option>
-                  <option value="player">Um jogador</option>
-                </select>
-              </label>
-            </div>
-            <label class="f" id="payerWrap" hidden>Jogador que pagou
-              <select id="payer"></select>
-            </label>
-          </div></div></div>
-          <button class="primary big" type="submit">Dividir</button>
-        </form>
-        <p class="msg" id="lootMsg" role="status"></p>
-      </div>
-      <div class="card preview" id="preview" aria-live="polite"></div>
-      <div class="card result" id="result" hidden></div>
+      <div class="content" id="content">
+    <div class="ctx"><h2 id="curSplit">Split 1#</h2><span>Cada split tem seus próprios jogadores e valores.</span></div>
+
+    <section class="stats" aria-label="Resumo">
+      <div class="stat hero"><small>Prata distribuída</small><b id="sTotal">0</b></div>
+      <div class="stat"><small>Ativos</small><b id="sActive">0</b></div>
+      <div class="stat"><small>Pausados</small><b id="sPaused">0</b></div>
+      <div class="stat"><small>Sobra</small><b id="sCarry">0</b></div>
+      <div class="stat"><small>Reparo da guilda</small><b id="sGuild">0</b></div>
     </section>
 
-    <!-- Jogadores -->
-    <section class="view" id="view-players" role="tabpanel" hidden>
-      <div class="card">
-        <h2>Jogadores</h2>
-        <p class="lead">Quem entra depois só recebe dos próximos loots. Pausado não recebe, mas mantém o que já tem.</p>
-        <form class="inline" id="memberForm" autocomplete="off">
-          <input type="text" id="nick" maxlength="32" placeholder="Nick do jogador" aria-label="Nick do jogador" required>
-          <button type="submit" class="primary">Adicionar</button>
-        </form>
-        <p class="msg" id="memberMsg" role="status"></p>
-        <ul class="members" id="members"></ul>
-        <p class="empty" id="membersEmpty">Nenhum jogador ainda. Adicione os nicks para começar.</p>
-      </div>
-      <div class="card">
-        <button type="button" class="head" id="donateHead" aria-expanded="false" aria-controls="donateBody">
-          <span><b>Doar prata</b><small>Passe parte do saldo de um jogador para outro.</small></span>
-          <span class="chev" aria-hidden="true">›</span>
-        </button>
-        <div class="collapse" id="donateBody"><div class="inner">
-          <form class="stack padtop" id="donateForm" autocomplete="off">
-            <div class="two">
-              <label class="f">De <select id="donFrom"></select></label>
-              <label class="f">Para <select id="donTo"></select></label>
-            </div>
-            <label class="f">Valor
-              <div class="inline">
-                <input type="text" id="donAmount" inputmode="decimal" placeholder="ex: 100k" required>
-                <button type="button" class="small" id="donAll">Tudo</button>
+    <nav class="tabs" role="tablist" id="tabs" aria-label="Menu">
+      <span class="ind" id="ind"></span>
+      <button class="tab" role="tab" data-tab="split" aria-selected="true">Dividir</button>
+      <button class="tab" role="tab" data-tab="players" aria-selected="false">Jogadores <span class="badge" id="bPlayers">0</span></button>
+      <button class="tab" role="tab" data-tab="history" aria-selected="false">Histórico <span class="badge" id="bHistory">0</span></button>
+      <button class="tab" role="tab" data-tab="share" aria-selected="false">Dados</button>
+    </nav>
+
+    <main>
+      <!-- Dividir -->
+      <section class="view" id="view-split" role="tabpanel">
+        <div class="card">
+          <h2>Nova divisão</h2>
+          <p class="lead">Quem estiver ativo na hora recebe a parte.</p>
+          <form class="stack" id="lootForm" autocomplete="off">
+            <label class="f amount">Prata do conteúdo
+              <input type="text" id="amount" inputmode="decimal" placeholder="1.500.000 ou 1.5m ou 250k" required>
+            </label>
+            <button type="button" class="toggle" id="repairToggle" aria-expanded="false" aria-controls="repairBox">
+              <span class="plus" aria-hidden="true">+</span><span id="repairLabel">Adicionar reparo</span>
+            </button>
+            <div class="collapse" id="repairBox"><div class="inner"><div class="stack">
+              <div class="two">
+                <label class="f">Reparo (prata)
+                  <input type="text" id="repair" inputmode="decimal" placeholder="ex: 250k">
+                </label>
+                <label class="f">Quem pagou
+                  <select id="payerType">
+                    <option value="guild">Guilda</option>
+                    <option value="player">Um jogador</option>
+                  </select>
+                </label>
               </div>
-            </label>
-            <p class="pv-hint" id="donHint"></p>
-            <button class="primary" type="submit">Doar</button>
+              <label class="f" id="payerWrap" hidden>Jogador que pagou
+                <select id="payer"></select>
+              </label>
+            </div></div></div>
+            <button class="primary big" type="submit">Dividir</button>
           </form>
-        </div></div>
+          <p class="msg" id="lootMsg" role="status"></p>
+        </div>
+        <div class="card preview" id="preview" aria-live="polite"></div>
+        <div class="card result" id="result" hidden></div>
+      </section>
+
+      <!-- Jogadores -->
+      <section class="view" id="view-players" role="tabpanel" hidden>
+        <div class="card">
+          <h2>Jogadores</h2>
+          <p class="lead">Quem entra depois só recebe dos próximos loots. Pausado não recebe, mas mantém o que já tem.</p>
+          <form class="inline" id="memberForm" autocomplete="off">
+            <input type="text" id="nick" maxlength="32" placeholder="Nick do jogador" aria-label="Nick do jogador" required>
+            <button type="submit" class="primary">Adicionar</button>
+            <button type="button" class="iconbtn" id="openGuild" title="Puxar membros da Diretoria" aria-label="Puxar membros da guilda">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5a3 3 0 0 1 0 6"/><path d="M18 14.3c1.8.8 3 2.6 3 4.7"/></svg>
+            </button>
+          </form>
+          <p class="msg" id="memberMsg" role="status"></p>
+          <ul class="members" id="members"></ul>
+          <p class="empty" id="membersEmpty">Nenhum jogador ainda. Adicione os nicks para começar.</p>
+        </div>
+      </section>
+
+
+      <!-- Histórico -->
+      <section class="view" id="view-history" role="tabpanel" hidden>
+        <div class="card">
+          <h2>Histórico</h2>
+          <p class="lead">Toque em um loot para ver os detalhes.</p>
+          <div class="bar">
+            <button id="undo" class="small">Desfazer último</button>
+            <button id="copy" class="small">Copiar resumo</button>
+            <button id="copyAll" class="small">Copiar todos os splits</button>
+          </div>
+          <div class="bar" style="margin-top:8px">
+            <button id="dCopy" class="small">Copiar p/ Discord</button>
+            <button id="dSend" class="small primary">Enviar ao Discord</button>
+            <button id="dSendAll" class="small">Enviar todos os splits</button>
+          </div>
+          <p class="msg" id="dMsg" role="status"></p>
+          <details id="dCfg">
+            <summary>Trocar canal do Discord (webhook)</summary>
+            <p class="note">O app já vem com um canal configurado. Para usar outro: Editar canal › Integrações › Webhooks › Novo webhook › Copiar URL, e cole abaixo.</p>
+            <p class="note">Quem tiver essa URL consegue postar no canal. Ela fica só neste navegador e não vai junto no link ou código de compartilhar.</p>
+            <input type="password" id="dUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off" style="width:100%" aria-label="URL do webhook do Discord">
+            <div class="bar" style="margin-top:8px">
+              <button id="dSave" class="small primary">Salvar</button>
+              <button id="dTest" class="small">Enviar teste</button>
+              <button id="dRemove" class="small">Voltar ao padrão</button>
+            </div>
+          </details>
+          <div class="hist" id="history"></div>
+          <p class="empty" id="historyEmpty">Nenhum loot dividido ainda.</p>
+          <div id="donSection" hidden>
+            <h2>Doações</h2>
+            <div class="hist" id="donList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Compartilhar -->
+      <section class="view" id="view-share" role="tabpanel" hidden>
+        <div class="card">
+          <h2>Passar para outra pessoa</h2>
+          <p class="lead">Gere um link ou código com todos os splits. Quem receber abre o link, ou cola o código, e continua de onde parou.</p>
+          <div class="opts two">
+            <div class="opt"><b>Link</b><span>A pessoa abre e o registro carrega sozinho.</span><button id="shareLink" class="primary small">Copiar link</button></div>
+            <div class="opt"><b>Código</b><span>Texto curto. Copie para enviar ou cole um código recebido.</span>
+              <div class="bar"><button id="shareCode" class="primary small">Copiar</button><button id="pasteCode" class="small">Colar</button></div>
+            </div>
+          </div>
+          <p class="msg" id="shareMsg" role="status"></p>
+        </div>
+        <div class="card">
+          <h2>Zerar</h2>
+          <p class="lead">Vale só para o split que está aberto. Você vai confirmar antes.</p>
+          <div class="opts two">
+            <div class="opt"><b>Zerar valores</b><span>Mantém os jogadores na lista. Apaga saldos, histórico e contadores.</span><button id="resetValues" class="small danger">Zerar valores</button></div>
+            <div class="opt"><b>Zerar tudo</b><span>Apaga jogadores, valores e histórico.</span><button id="reset" class="small danger">Zerar tudo</button></div>
+          </div>
+        </div>
+      </section>
+    </main>
+      </div>
+    </div>
+
+    <footer class="foot">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5L3 8z"/><rect x="5" y="20" width="14" height="1.6" rx=".8"/></svg>
+      <span>Criado para a guilda <b>Diretoria</b></span>
+      <span class="sep" aria-hidden="true"></span>
+      <span>Desenvolvido por <b>Kiedis</b></span>
+    </footer>
+  </div>
+
+  <div class="modal" id="modal" hidden>
+    <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="mTitle" aria-describedby="mText">
+      <h2 id="mTitle"></h2>
+      <p id="mText"></p>
+      <textarea id="mBox" readonly hidden aria-label="Texto para copiar"></textarea>
+      <div class="bar end">
+        <button id="mCancel" class="small">Cancelar</button>
+        <button id="mOk" class="small primary">Confirmar</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="pm" hidden>
+    <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+      <h2 id="pmTitle">Colar código</h2>
+      <p>Cole o código (ou link) que você recebeu. Isso substitui todos os splits atuais.</p>
+      <textarea id="pmBox" placeholder="Cole aqui o código ou link" aria-label="Código ou link"></textarea>
+      <p class="msg" id="pmMsg" role="status" style="margin-top:-8px"></p>
+      <div class="bar end">
+        <button type="button" id="pmCancel" class="small">Cancelar</button>
+        <button type="button" id="pmOk" class="small primary">Importar</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="dm" hidden>
+    <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dmTitle">
+      <h2 id="dmTitle">Doar prata</h2>
+      <form class="stack" id="donateForm" autocomplete="off">
+        <div class="two">
+          <label class="f">De <select id="donFrom"></select></label>
+          <label class="f">Para <select id="donTo"></select></label>
+        </div>
+        <label class="f">Valor
+          <div class="inline">
+            <input type="text" id="donAmount" inputmode="decimal" placeholder="ex: 100k" required>
+            <button type="button" class="small" id="donAll">Tudo</button>
+          </div>
+        </label>
+        <p class="pv-hint" id="donHint" style="margin:0"></p>
         <p class="msg" id="donMsg" role="status"></p>
-      </div>
-    </section>
-
-    <!-- Histórico -->
-    <section class="view" id="view-history" role="tabpanel" hidden>
-      <div class="card">
-        <h2>Histórico</h2>
-        <p class="lead">Toque em um loot para ver os detalhes.</p>
-        <div class="bar">
-          <button id="undo" class="small">Desfazer último</button>
-          <button id="copy" class="small">Copiar resumo</button>
-          <button id="copyAll" class="small">Copiar todos os splits</button>
+        <div class="bar end">
+          <button type="button" class="small" id="dmClose">Cancelar</button>
+          <button class="primary small" type="submit">Doar</button>
         </div>
-        <div class="hist" id="history"></div>
-        <p class="empty" id="historyEmpty">Nenhum loot dividido ainda.</p>
-        <div id="donSection" hidden>
-          <h2>Doações</h2>
-          <div class="hist" id="donList"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Compartilhar -->
-    <section class="view" id="view-share" role="tabpanel" hidden>
-      <div class="card">
-        <h2>Passar para outra pessoa</h2>
-        <p class="lead">Gere um link, código ou arquivo com todos os splits. Quem receber importa e continua de onde parou.</p>
-        <div class="opts">
-          <div class="opt"><b>Link</b><span>A pessoa abre e o registro carrega sozinho.</span><button id="shareLink" class="primary small">Copiar link</button></div>
-          <div class="opt"><b>Código</b><span>Texto curto para colar em Importar.</span><button id="shareCode" class="small">Copiar código</button></div>
-          <div class="opt"><b>Arquivo</b><span>Backup .json para guardar ou enviar.</span><button id="shareFile" class="small">Baixar arquivo</button></div>
-        </div>
-      </div>
-      <div class="card">
-        <button type="button" class="head" id="importHead" aria-expanded="false" aria-controls="importBody">
-          <span><b>Importar registro</b><small>Cole um link ou código, ou envie um arquivo. Substitui todos os splits atuais.</small></span>
-          <span class="chev" aria-hidden="true">›</span>
-        </button>
-        <div class="collapse" id="importBody"><div class="inner"><div class="stack padtop">
-          <textarea id="importBox" placeholder="Cole aqui o link ou o código" aria-label="Link ou código"></textarea>
-          <div class="bar"><button id="importBtn" class="primary small">Importar</button></div>
-          <label class="drop" id="drop" for="importFile">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
-            <b>Escolher arquivo</b>
-            <small>ou arraste o arquivo .json até aqui</small>
-          </label>
-          <input type="file" id="importFile" class="sr" accept=".json,application/json,text/plain">
-        </div></div></div>
-        <p class="msg" id="shareMsg" role="status"></p>
-      </div>
-      <div class="card">
-        <h2>Zerar</h2>
-        <p class="lead">Vale só para o split que está aberto. Você vai confirmar antes.</p>
-        <div class="opts two">
-          <div class="opt"><b>Zerar valores</b><span>Mantém os jogadores na lista. Apaga saldos, histórico e contadores.</span><button id="resetValues" class="small danger">Zerar valores</button></div>
-          <div class="opt"><b>Zerar tudo</b><span>Apaga jogadores, valores e histórico.</span><button id="reset" class="small danger">Zerar tudo</button></div>
-        </div>
-      </div>
-    </section>
-  </main>
+      </form>
     </div>
   </div>
+  <div class="gback" id="gBack" hidden></div>
+  <aside class="gdrawer" id="gDrawer" role="dialog" aria-modal="true" aria-labelledby="gdTitle" aria-hidden="true">
+    <div class="gd-top"><b id="gdTitle">Membros da guilda</b><button type="button" class="x" id="gdClose" aria-label="Fechar">×</button></div>
+        <div class="card">
+          <div class="gh">
+            <div><h2 id="gName">Guilda</h2><p class="lead" id="gMeta"></p></div>
+            <div class="bar">
+              <button type="button" id="gRefresh" class="small">Atualizar</button>
+            </div>
+          </div>
+          <p class="msg" id="gMsg" role="status"></p>
+          <details id="gManual" hidden>
+            <summary>Carregar manualmente (se a atualização falhar)</summary>
+            <p class="note">1) Abra o link abaixo em outra aba. 2) Selecione tudo (Ctrl+A), copie (Ctrl+C). 3) Cole aqui e toque em Importar.</p>
+            <p class="note"><a id="gManualLink" target="_blank" rel="noopener">Abrir lista de membros da API</a></p>
+            <textarea id="gPaste" rows="4" style="width:100%" placeholder="Cole aqui o texto da API" aria-label="JSON da API"></textarea>
+            <button type="button" id="gPasteBtn" class="small">Importar</button>
+          </details>
+          <p class="empty" id="gEmpty">Carregando membros...</p>
+          <div id="gBox" hidden>
+            <div class="gctl">
+              <input type="text" id="gFilter" placeholder="Filtrar por nick" aria-label="Filtrar por nick" autocomplete="off">
+              <select id="gSort" aria-label="Ordenar">
+                <option value="recent">Atividade recente</option>
+                <option value="az">A a Z</option>
+              </select>
+            </div>
+            <label class="chk"><input type="checkbox" id="gRecent"> Só quem teve atividade nos últimos 3 dias</label>
+            <div class="bar" style="margin-bottom:8px">
+              <button type="button" class="small" id="gAll">Marcar todos</button>
+              <button type="button" class="small" id="gFresh">Marcar recentes</button>
+              <button type="button" class="small" id="gNone">Limpar</button>
+            </div>
+            <div class="picklist" id="gList"></div>
+            <button type="button" class="primary" id="gAdd" style="margin-top:12px;width:100%" disabled>Adicionar 0</button>
+          </div>
+          <p class="note">A API do Albion não informa quem está online. A "atividade" é a data da última atualização das estatísticas do jogador, só uma pista de quem jogou recentemente.</p>
+        </div>
+  </aside>
+  <div class="toast" id="toast" role="status"></div>
 
-  <footer class="foot">
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5L3 8z"/><rect x="5" y="20" width="14" height="1.6" rx=".8"/></svg>
-    <span>Criado para a guilda <b>Diretoria</b></span>
-    <span class="sep" aria-hidden="true"></span>
-    <span>Desenvolvido por <b>Kiedis</b></span>
-  </footer>
-</div>
+  <script>
+  (function () {
+    var KEY = 'albion-loot-split-v3', OLD_KEY = 'albion-loot-split-v2', MAX = 5, MIN = 3;
+    var root = load();
+    var state = root.splits[root.active];
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var freshMember = null, freshEntry = null, freshDon = null, shown = {}, repairOpen = false;
 
-<div class="modal" id="modal" hidden>
-  <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="mTitle" aria-describedby="mText">
-    <h2 id="mTitle"></h2>
-    <p id="mText"></p>
-    <textarea id="mBox" readonly hidden aria-label="Texto para copiar"></textarea>
-    <div class="bar end">
-      <button id="mCancel" class="small">Cancelar</button>
-      <button id="mOk" class="small primary">Confirmar</button>
-    </div>
-  </div>
-</div>
-<div class="toast" id="toast" role="status"></div>
-
-<script>
-(function () {
-  var KEY = 'albion-loot-split-v3', OLD_KEY = 'albion-loot-split-v2', MAX = 5, MIN = 3;
-  var root = load();
-  var state = root.splits[root.active];
-  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var freshMember = null, freshEntry = null, freshDon = null, shown = {}, repairOpen = false;
-
-  function blank() { return { members: [], entries: [], donations: [], carry: 0, guildTotal: 0, nextId: 1 }; }
-  function fixSplit(x) { if (!x.guildTotal) x.guildTotal = 0; if (!Array.isArray(x.donations)) x.donations = []; return x; }
-  function load() {
-    try {
-      var r = JSON.parse(localStorage.getItem(KEY));
-      if (r && Array.isArray(r.splits) && r.splits.length) {
-        r.splits = r.splits.map(fixSplit);
-        r.active = Math.min(Math.max(Math.floor(Number(r.active)) || 0, 0), r.splits.length - 1);
-        return r;
-      }
-    } catch (e) {}
-    try {
-      var o = JSON.parse(localStorage.getItem(OLD_KEY));
-      if (o && Array.isArray(o.members) && Array.isArray(o.entries)) return { splits: [fixSplit(o), blank(), blank()], active: 0 };
-    } catch (e) {}
-    return { splits: [blank(), blank(), blank()], active: 0 };
-  }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(root)); } catch (e) {} }
-
-  var $ = function (id) { return document.getElementById(id); };
-  var fmt = function (n) { return Math.round(n).toLocaleString('pt-BR'); };
-
-  function h(tag, props, children) {
-    var e = document.createElement(tag);
-    if (props) for (var k in props) {
-      if (k === 'text') e.textContent = props[k];
-      else if (k === 'class') e.className = props[k];
-      else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), props[k]);
-      else e.setAttribute(k, props[k]);
-    }
-    (children || []).forEach(function (c) { if (c) e.appendChild(c); });
-    return e;
-  }
-
-  // Número que "rola" até o novo valor
-  function setNum(el, key, value) {
-    var from = shown.hasOwnProperty(key) ? shown[key] : value;
-    shown[key] = value;
-    if (reduce || from === value) { el.textContent = fmt(value); return; }
-    var start = performance.now(), dur = 550;
-    (function step(t) {
-      var k = Math.min(1, (t - start) / dur);
-      k = 1 - Math.pow(1 - k, 3);
-      el.textContent = fmt(from + (value - from) * k);
-      if (k < 1) requestAnimationFrame(step);
-    })(start);
-  }
-
-  // Aceita 1500000, 1.500.000, 1,5m, 1.5m, 250k, 2kk
-  function parseSilver(raw) {
-    var s = String(raw).toLowerCase().replace(/\s/g, '');
-    if (!s) return NaN;
-    var mult = 1;
-    if (/kk$/.test(s)) { mult = 1e6; s = s.slice(0, -2); }
-    else if (/m$/.test(s)) { mult = 1e6; s = s.slice(0, -1); }
-    else if (/k$/.test(s)) { mult = 1e3; s = s.slice(0, -1); }
-    if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
-    else if (/^\d{1,3}(,\d{3})+$/.test(s)) s = s.replace(/,/g, '');
-    else s = s.replace(',', '.');
-    if (!/^\d*\.?\d+$/.test(s)) return NaN;
-    return Math.floor(parseFloat(s) * mult);
-  }
-
-  function activeMembers() { return state.members.filter(function (m) { return m.active; }); }
-
-  function toast(t) {
-    var el = $('toast'); el.textContent = t; el.classList.add('show');
-    clearTimeout(toast._t); toast._t = setTimeout(function () { el.classList.remove('show'); }, 1800);
-  }
-
-  // ---------- Popup ----------
-  var modalResolve = null, lastFocus = null;
-  function openModal(o) {
-    return new Promise(function (res) {
-      if (modalResolve) modalResolve(false);
-      lastFocus = document.activeElement;
-      $('mTitle').textContent = o.title;
-      $('mText').textContent = o.text || ''; $('mText').hidden = !o.text;
-      $('mBox').hidden = !o.box; if (o.box) $('mBox').value = o.box;
-      $('mCancel').hidden = !!o.hideCancel;
-      var ok = $('mOk'); ok.textContent = o.ok || 'Confirmar';
-      ok.className = 'small ' + (o.danger ? 'danger-solid' : 'primary');
-      $('modal').hidden = false; modalResolve = res;
-      setTimeout(function () {
-        if (o.box) { $('mBox').focus(); $('mBox').select(); }
-        else (o.danger ? $('mCancel') : ok).focus();
-      }, 0);
-    });
-  }
-  function closeModal(v) {
-    $('modal').hidden = true;
-    var r = modalResolve; modalResolve = null;
-    if (lastFocus && lastFocus.focus) lastFocus.focus();
-    if (r) r(v);
-  }
-  function ask(title, text, ok, danger) { return openModal({ title: title, text: text, ok: ok, danger: danger }); }
-  $('mOk').addEventListener('click', function () { closeModal(true); });
-  $('mCancel').addEventListener('click', function () { closeModal(false); });
-  $('modal').addEventListener('mousedown', function (ev) { if (ev.target === $('modal')) closeModal(false); });
-  $('modal').addEventListener('keydown', function (ev) {
-    if (ev.key === 'Escape') { ev.preventDefault(); closeModal(false); return; }
-    if (ev.key !== 'Tab') return;
-    var f = [].slice.call($('modal').querySelectorAll('button, textarea')).filter(function (x) { return !x.hidden; });
-    if (!f.length) return;
-    var first = f[0], last = f[f.length - 1];
-    if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
-    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
-  });
-
-  // ---------- Menu ----------
-  var tabs = [].slice.call(document.querySelectorAll('.tab'));
-  var views = { split: $('view-split'), players: $('view-players'), history: $('view-history'), share: $('view-share') };
-  function moveInd() {
-    var t = tabs.filter(function (x) { return x.getAttribute('aria-selected') === 'true'; })[0];
-    if (!t) return;
-    $('ind').style.width = t.offsetWidth + 'px';
-    $('ind').style.transform = 'translateX(' + t.offsetLeft + 'px)';
-  }
-  function showTab(name) {
-    tabs.forEach(function (t) {
-      var on = t.dataset.tab === name;
-      t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
-    });
-    Object.keys(views).forEach(function (k) { views[k].hidden = k !== name; });
-    moveInd();
-  }
-  tabs.forEach(function (t, i) {
-    t.addEventListener('click', function () { showTab(t.dataset.tab); });
-    t.addEventListener('keydown', function (ev) {
-      var j = ev.key === 'ArrowRight' ? i + 1 : ev.key === 'ArrowLeft' ? i - 1 : -1;
-      if (j < 0 || j >= tabs.length) return;
-      ev.preventDefault(); tabs[j].focus(); showTab(tabs[j].dataset.tab);
-    });
-  });
-  window.addEventListener('resize', moveInd);
-
-  // ---------- Divisão ----------
-  function setRepair(open) {
-    repairOpen = open;
-    $('repairBox').classList.toggle('open', open);
-    $('repairToggle').setAttribute('aria-expanded', String(open));
-    $('repairLabel').textContent = open ? 'Remover reparo' : 'Adicionar reparo';
-    if (!open) $('repair').value = '';
-    updatePreview();
-  }
-
-  function readLoot() {
-    var raw = repairOpen ? $('repair').value.trim() : '';
-    return { gross: parseSilver($('amount').value), repair: raw ? parseSilver(raw) : 0 };
-  }
-
-  function refreshPayer() {
-    var sel = $('payer'), prev = sel.value;
-    sel.innerHTML = '';
-    state.members.forEach(function (m) {
-      var o = document.createElement('option'); o.value = m.id; o.textContent = m.name; sel.appendChild(o);
-    });
-    if (prev) sel.value = prev;
-    $('payerWrap').hidden = $('payerType').value !== 'player';
-  }
-
-  function updatePreview() {
-    var box = $('preview'); box.innerHTML = '';
-    var hint = function (t) { box.appendChild(h('p', { class: 'pv-hint', text: t })); };
-    var l = readLoot();
-    if (isNaN(l.gross) || l.gross <= 0) { hint('Digite a prata do conteúdo para ver como fica a divisão.'); return; }
-    var n = activeMembers().length;
-    if (!n) { hint('Nenhum jogador ativo. Adicione jogadores na aba Jogadores.'); return; }
-    if (isNaN(l.repair)) { hint('Valor do reparo inválido.'); return; }
-    var byPlayer = l.repair > 0 && $('payerType').value === 'player';
-    if (byPlayer && l.repair > l.gross) { hint('O reparo é maior que o loot.'); return; }
-    var share = Math.floor((l.gross - (byPlayer ? l.repair : 0) + state.carry) / n);
-    box.appendChild(h('div', { class: 'pv-big' }, [
-      h('b', { text: fmt(share) }),
-      h('span', { text: 'para cada um dos ' + n + (n === 1 ? ' ativo' : ' ativos') })
-    ]));
-    var lines = [];
-    if (l.repair > 0 && !byPlayer) lines.push('Reparo de ' + fmt(l.repair) + ' pago pela guilda, sem desconto dos membros.');
-    if (byPlayer) {
-      var pct = (100 / n).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
-      lines.push('Reparo de ' + fmt(l.repair) + ': cada um arca com ' + fmt(l.repair / n) + ' (' + pct + '%).');
-      var m = state.members.filter(function (x) { return String(x.id) === $('payer').value; })[0];
-      if (m) {
-        var own = m.active ? Math.floor(l.repair / n) : 0;
-        lines.push(m.name + ' recebe ' + fmt(share + l.repair) + ': loot ' + fmt(share + own) + ' + reembolso ' + fmt(l.repair - own) +
-          ' (só a parte dos outros; a dele, ' + fmt(own) + ', já fica descontada).');
-      }
-    }
-    if (state.carry > 0) lines.push('Inclui ' + fmt(state.carry) + ' de sobra do loot anterior.');
-    if (lines.length) box.appendChild(h('ul', { class: 'pv-lines' }, lines.map(function (t) { return h('li', { text: t }); })));
-  }
-
-  function showResult(e) {
-    var r = $('result'); r.innerHTML = '';
-    r.appendChild(h('b', { text: 'Loot #' + e.n + ' dividido' }));
-    r.appendChild(h('p', { text: 'Cada um dos ' + e.count + ' recebeu ' + fmt(e.share) + ' de prata.' }));
-    if (e.payerId) r.appendChild(h('p', { text: e.payerName + ' recebe ' + fmt(e.share + e.repair) + ' (inclui o reembolso do reparo).' }));
-    else if (e.repair > 0) r.appendChild(h('p', { text: 'Reparo de ' + fmt(e.repair) + ' pago pela guilda.' }));
-    r.hidden = false; r.classList.remove('pop'); void r.offsetWidth; r.classList.add('pop');
-  }
-
-  // ---------- Render ----------
-  function hue(name) { var x = 0; for (var i = 0; i < name.length; i++) x = (x * 31 + name.charCodeAt(i)) % 360; return x; }
-
-  function render() {
-    renderSide();
-    var act = activeMembers().length;
-    setNum($('sTotal'), 'sTotal', state.entries.reduce(function (a, e) { return a + e.distributed; }, 0));
-    setNum($('sActive'), 'sActive', act);
-    setNum($('sPaused'), 'sPaused', state.members.length - act);
-    setNum($('sCarry'), 'sCarry', state.carry);
-    setNum($('sGuild'), 'sGuild', state.guildTotal);
-    $('bPlayers').textContent = state.members.length;
-    $('bHistory').textContent = state.entries.length;
-
-    var ul = $('members'); ul.innerHTML = '';
-    state.members.forEach(function (m) {
-      var bal = h('div', { class: 'bal' }); setNum(bal, 'm' + m.id, m.total);
-      ul.appendChild(h('li', { class: 'm' + (m.active ? '' : ' paused') + (m.id === freshMember ? ' fresh' : '') }, [
-        h('div', { class: 'av', text: m.name.charAt(0).toUpperCase(), style: 'background:hsl(' + hue(m.name) + ' 35% 38%)' }),
-        h('div', { class: 'info' }, [
-          h('div', { class: 'nick' }, [h('span', { text: m.name }), h('span', { class: 'pill ' + (m.active ? 'on' : 'off'), text: m.active ? 'ativo' : 'pausado' })]),
-          h('div', { class: 'meta', text: m.since === 0 ? 'desde o início' : 'entrou após o loot #' + m.since })
-        ]),
-        bal,
-        h('button', { class: 'switch', role: 'switch', 'aria-checked': String(m.active),
-          'aria-label': (m.active ? 'Pausar ' : 'Retomar ') + m.name, title: m.active ? 'Pausar' : 'Voltar ao conteúdo',
-          onclick: function () { toggle(m.id); } }),
-        h('button', { class: 'x', 'aria-label': 'Remover ' + m.name, title: 'Remover', text: '×', onclick: function () { removeMember(m.id); } })
-      ]));
-    });
-    freshMember = null;
-    $('membersEmpty').hidden = state.members.length > 0;
-
-    var hist = $('history'); hist.innerHTML = '';
-    state.entries.slice().reverse().forEach(function (e) {
-      var d = new Date(e.time);
-      var hh = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
-      var own = e.payerOwn || 0;
-      var lines = ['Dividido entre ' + e.count + (e.count === 1 ? ' jogador' : ' jogadores') + (e.names && e.names.length ? ': ' + e.names.join(', ') : '') + '.'];
-      if (e.repair) {
-        if (e.payerType === 'guild') lines.push('Reparo de ' + fmt(e.repair) + ' pago pela guilda, sem desconto dos membros.');
-        else {
-          lines.push('Reparo de ' + fmt(e.repair) + ' pago por ' + e.payerName + '; cada um arca com ' + fmt(e.repair / e.count) + '.');
-          lines.push(e.payerName + ' recebe ' + fmt(e.share + e.repair) + ' = loot ' + fmt(e.share + own) + ' + reembolso ' + fmt(e.repair - own) +
-            ' (só a parte dos outros; a dele, ' + fmt(own) + ', já descontada).');
+    function blank() { return { members: [], entries: [], donations: [], carry: 0, guildTotal: 0, nextId: 1 }; }
+    function fixSplit(x) { if (!x.guildTotal) x.guildTotal = 0; if (!Array.isArray(x.donations)) x.donations = []; return x; }
+    function load() {
+      try {
+        var r = JSON.parse(localStorage.getItem(KEY));
+        if (r && Array.isArray(r.splits) && r.splits.length) {
+          r.splits = r.splits.map(fixSplit);
+          r.active = Math.min(Math.max(Math.floor(Number(r.active)) || 0, 0), r.splits.length - 1);
+          return r;
         }
+      } catch (e) {}
+      try {
+        var o = JSON.parse(localStorage.getItem(OLD_KEY));
+        if (o && Array.isArray(o.members) && Array.isArray(o.entries)) return { splits: [fixSplit(o), blank(), blank()], active: 0 };
+      } catch (e) {}
+      return { splits: [blank(), blank(), blank()], active: 0 };
+    }
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(root)); } catch (e) {} }
+
+    var $ = function (id) { return document.getElementById(id); };
+    var fmt = function (n) { return Math.round(n).toLocaleString('pt-BR'); };
+
+    function h(tag, props, children) {
+      var e = document.createElement(tag);
+      if (props) for (var k in props) {
+        if (k === 'text') e.textContent = props[k];
+        else if (k === 'class') e.className = props[k];
+        else if (k.indexOf('on') === 0) e.addEventListener(k.slice(2), props[k]);
+        else e.setAttribute(k, props[k]);
       }
-      hist.appendChild(h('details', { class: 'entry' + (e.n === freshEntry ? ' fresh' : '') }, [
-        h('summary', {}, [
-          h('span', { class: 'no', text: '#' + e.n }),
-          h('span', { class: 'time', text: hh }),
-          h('span', { class: 'amt', text: fmt(e.gross) }),
-          h('span', { class: 'each', text: fmt(e.share) + ' cada' }),
-          h('span', { class: 'chev', text: '›', 'aria-hidden': 'true' })
-        ]),
-        h('div', { class: 'body' }, lines.map(function (t) { return h('div', { text: t }); }))
-      ]));
+      (children || []).forEach(function (c) { if (c) e.appendChild(c); });
+      return e;
+    }
+
+    // Número que "rola" até o novo valor
+    function setNum(el, key, value) {
+      var from = shown.hasOwnProperty(key) ? shown[key] : value;
+      shown[key] = value;
+      if (reduce || from === value) { el.textContent = fmt(value); return; }
+      var start = performance.now(), dur = 550;
+      (function step(t) {
+        var k = Math.min(1, (t - start) / dur);
+        k = 1 - Math.pow(1 - k, 3);
+        el.textContent = fmt(from + (value - from) * k);
+        if (k < 1) requestAnimationFrame(step);
+      })(start);
+    }
+
+    // Aceita 1500000, 1.500.000, 1,5m, 1.5m, 250k, 2kk
+    function parseSilver(raw) {
+      var s = String(raw).toLowerCase().replace(/\s/g, '');
+      if (!s) return NaN;
+      var mult = 1;
+      if (/kk$/.test(s)) { mult = 1e6; s = s.slice(0, -2); }
+      else if (/m$/.test(s)) { mult = 1e6; s = s.slice(0, -1); }
+      else if (/k$/.test(s)) { mult = 1e3; s = s.slice(0, -1); }
+      if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+      else if (/^\d{1,3}(,\d{3})+$/.test(s)) s = s.replace(/,/g, '');
+      else s = s.replace(',', '.');
+      if (!/^\d*\.?\d+$/.test(s)) return NaN;
+      return Math.floor(parseFloat(s) * mult);
+    }
+
+    function activeMembers() { return state.members.filter(function (m) { return m.active; }); }
+
+    function toast(t) {
+      var el = $('toast'); el.textContent = t; el.classList.add('show');
+      clearTimeout(toast._t); toast._t = setTimeout(function () { el.classList.remove('show'); }, 1800);
+    }
+
+    // ---------- Popup ----------
+    var modalResolve = null, lastFocus = null;
+    function openModal(o) {
+      return new Promise(function (res) {
+        if (modalResolve) modalResolve(false);
+        lastFocus = document.activeElement;
+        $('mTitle').textContent = o.title;
+        $('mText').textContent = o.text || ''; $('mText').hidden = !o.text;
+        $('mBox').hidden = !o.box; if (o.box) $('mBox').value = o.box;
+        $('mCancel').hidden = !!o.hideCancel;
+        var ok = $('mOk'); ok.textContent = o.ok || 'Confirmar';
+        ok.className = 'small ' + (o.danger ? 'danger-solid' : 'primary');
+        $('modal').hidden = false; modalResolve = res;
+        setTimeout(function () {
+          if (o.box) { $('mBox').focus(); $('mBox').select(); }
+          else (o.danger ? $('mCancel') : ok).focus();
+        }, 0);
+      });
+    }
+    function closeModal(v) {
+      $('modal').hidden = true;
+      var r = modalResolve; modalResolve = null;
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+      if (r) r(v);
+    }
+    function ask(title, text, ok, danger) { return openModal({ title: title, text: text, ok: ok, danger: danger }); }
+    $('mOk').addEventListener('click', function () { closeModal(true); });
+    $('mCancel').addEventListener('click', function () { closeModal(false); });
+    $('modal').addEventListener('mousedown', function (ev) { if (ev.target === $('modal')) closeModal(false); });
+    $('modal').addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') { ev.preventDefault(); closeModal(false); return; }
+      if (ev.key !== 'Tab') return;
+      var f = [].slice.call($('modal').querySelectorAll('button, textarea')).filter(function (x) { return !x.hidden; });
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
     });
-    freshEntry = null;
 
-    var dl = $('donList'); dl.innerHTML = '';
-    state.donations.slice().reverse().forEach(function (d, i) {
-      var dt = new Date(d.time);
-      var hh2 = ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2);
-      dl.appendChild(h('div', { class: 'don' + (d.time === freshDon ? ' fresh' : '') }, [
-        h('div', { class: 'info' }, [
-          h('div', { class: 'nick', text: d.fromName + ' doou para ' + d.toName }),
-          h('div', { class: 'meta', text: hh2 })
-        ]),
-        h('div', { class: 'bal', text: fmt(d.amount) }),
-        i === 0 ? h('button', { class: 'small', text: 'Desfazer', onclick: undoDonation }) : null
-      ]));
+    // ---------- Menu ----------
+    var tabs = [].slice.call(document.querySelectorAll('.tab'));
+    var views = { split: $('view-split'), players: $('view-players'), history: $('view-history'), share: $('view-share') };
+    function moveInd() {
+      var t = tabs.filter(function (x) { return x.getAttribute('aria-selected') === 'true'; })[0];
+      if (!t) return;
+      $('ind').style.width = t.offsetWidth + 'px';
+      $('ind').style.transform = 'translateX(' + t.offsetLeft + 'px)';
+    }
+    function showTab(name) {
+      tabs.forEach(function (t) {
+        var on = t.dataset.tab === name;
+        t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;
+      });
+      Object.keys(views).forEach(function (k) { views[k].hidden = k !== name; });
+      moveInd();
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { showTab(t.dataset.tab); });
+      t.addEventListener('keydown', function (ev) {
+        var j = ev.key === 'ArrowRight' ? i + 1 : ev.key === 'ArrowLeft' ? i - 1 : -1;
+        if (j < 0 || j >= tabs.length) return;
+        ev.preventDefault(); tabs[j].focus(); showTab(tabs[j].dataset.tab);
+      });
     });
-    freshDon = null;
-    $('donSection').hidden = !state.donations.length;
-    $('historyEmpty').hidden = state.entries.length > 0;
-    $('undo').disabled = !state.entries.length;
-    $('copy').disabled = !state.members.length;
-    $('copyAll').disabled = !root.splits.some(function (x) { return x.members.length; });
-    refreshPayer();
-    refreshDonate();
-    updatePreview();
-    moveInd();
-  }
+    window.addEventListener('resize', moveInd);
 
-  // ---------- Doação entre jogadores ----------
-  function memberById(v) { return state.members.filter(function (x) { return String(x.id) === String(v); })[0]; }
+    // ---------- Divisão ----------
+    function setRepair(open) {
+      repairOpen = open;
+      $('repairBox').classList.toggle('open', open);
+      $('repairToggle').setAttribute('aria-expanded', String(open));
+      $('repairLabel').textContent = open ? 'Remover reparo' : 'Adicionar reparo';
+      if (!open) $('repair').value = '';
+      updatePreview();
+    }
 
-  function refreshDonate() {
-    var f = $('donFrom'), t = $('donTo'), pf = f.value, pt = t.value;
-    [f, t].forEach(function (sel) {
+    function readLoot() {
+      var raw = repairOpen ? $('repair').value.trim() : '';
+      return { gross: parseSilver($('amount').value), repair: raw ? parseSilver(raw) : 0 };
+    }
+
+    function refreshPayer() {
+      var sel = $('payer'), prev = sel.value;
       sel.innerHTML = '';
       state.members.forEach(function (m) {
         var o = document.createElement('option'); o.value = m.id; o.textContent = m.name; sel.appendChild(o);
       });
-    });
-    if (pf) f.value = pf;
-    if (pt) t.value = pt;
-    if (f.value === t.value && state.members.length > 1) {
-      var other = state.members.filter(function (m) { return String(m.id) !== f.value; })[0];
-      if (other) t.value = other.id;
+      if (prev) sel.value = prev;
+      $('payerWrap').hidden = $('payerType').value !== 'player';
     }
-    updateDonHint();
-  }
 
-  function updateDonHint() {
-    var m = memberById($('donFrom').value);
-    $('donHint').textContent = m ? 'Saldo de ' + m.name + ': ' + fmt(m.total) : 'Adicione jogadores para poder doar.';
-  }
-
-  async function undoDonation() {
-    var d = state.donations[state.donations.length - 1];
-    if (!d) return;
-    if (!(await ask('Desfazer doação?', d.fromName + ' doou ' + fmt(d.amount) + ' para ' + d.toName + '. O valor volta para ' + d.fromName + '.', 'Desfazer', true))) return;
-    state.donations.pop();
-    state.members.forEach(function (m) {
-      if (m.id === d.fromId) m.total += d.amount;
-      if (m.id === d.toId) m.total -= d.amount;
-    });
-    save(); render();
-  }
-
-  $('donFrom').addEventListener('change', updateDonHint);
-  $('donAll').addEventListener('click', function () {
-    var m = memberById($('donFrom').value);
-    if (m && m.total > 0) $('donAmount').value = fmt(m.total);
-  });
-  $('donateForm').addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    var msg = $('donMsg'); msg.textContent = '';
-    var from = memberById($('donFrom').value), to = memberById($('donTo').value);
-    var amount = parseSilver($('donAmount').value);
-    if (!from || !to) { msg.textContent = 'Escolha os dois jogadores.'; return; }
-    if (from.id === to.id) { msg.textContent = 'Escolha jogadores diferentes.'; return; }
-    if (isNaN(amount) || amount <= 0) { msg.textContent = 'Valor inválido. Use por exemplo 100.000, 100k ou 1.5m.'; return; }
-    if (amount > from.total) { msg.textContent = from.name + ' só tem ' + fmt(from.total) + ' de saldo.'; return; }
-    from.total -= amount; to.total += amount;
-    var d = { time: Date.now(), fromId: from.id, fromName: from.name, toId: to.id, toName: to.name, amount: amount };
-    state.donations.push(d); freshDon = d.time;
-    $('donAmount').value = '';
-    save(); render();
-    toast(from.name + ' doou ' + fmt(amount) + ' para ' + to.name);
-  });
-
-  function toggle(id) {
-    state.members.forEach(function (m) { if (m.id === id) m.active = !m.active; });
-    save(); render();
-  }
-
-  async function removeMember(id) {
-    var m = state.members.filter(function (x) { return x.id === id; })[0];
-    if (!m) return;
-    var extra = m.total ? ' Ele(a) tem ' + fmt(m.total) + ' de prata acumulada, que será perdida.' : '';
-    if (!(await ask('Remover ' + m.name + '?', 'O jogador sai da lista.' + extra, 'Remover', true))) return;
-    state.members = state.members.filter(function (x) { return x.id !== id; });
-    save(); render();
-  }
-
-  $('memberForm').addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    var name = $('nick').value.trim();
-    var msg = $('memberMsg'); msg.textContent = '';
-    if (!name) return;
-    var dup = state.members.some(function (m) { return m.name.toLowerCase() === name.toLowerCase(); });
-    if (dup) { msg.textContent = 'Esse nick já está na lista.'; return; }
-    freshMember = state.nextId;
-    state.members.push({ id: state.nextId++, name: name, active: true, total: 0, since: state.entries.length });
-    $('nick').value = ''; $('nick').focus();
-    save(); render();
-  });
-
-  $('lootForm').addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    var msg = $('lootMsg'); msg.textContent = '';
-    var l = readLoot();
-    if (isNaN(l.gross) || l.gross <= 0) { msg.textContent = 'Valor inválido. Use por exemplo 1.500.000, 1.5m ou 250k.'; return; }
-    if (isNaN(l.repair)) { msg.textContent = 'Valor do reparo inválido.'; return; }
-    var type = $('payerType').value;
-    if (l.repair > 0 && type === 'player' && l.repair > l.gross) { msg.textContent = 'O reparo não pode ser maior que o loot.'; return; }
-    var act = activeMembers();
-    if (!act.length) { msg.textContent = 'Nenhum jogador ativo. Adicione jogadores na aba Jogadores.'; return; }
-    var payer = null;
-    if (l.repair > 0 && type === 'player') {
-      payer = state.members.filter(function (m) { return String(m.id) === $('payer').value; })[0];
-      if (!payer) { msg.textContent = 'Escolha o jogador que pagou o reparo.'; return; }
-    }
-    var pool = l.gross - (payer ? l.repair : 0) + state.carry;
-    var share = Math.floor(pool / act.length);
-    var carryBefore = state.carry;
-    state.carry = pool - share * act.length;
-    var ids = [], names = [];
-    act.forEach(function (m) { m.total += share; ids.push(m.id); names.push(m.name); });
-    var payerOwn = payer && ids.indexOf(payer.id) !== -1 ? Math.floor(l.repair / act.length) : 0;
-    if (payer) payer.total += l.repair;
-    else if (l.repair > 0) state.guildTotal += l.repair;
-    var entry = {
-      n: state.entries.length + 1, time: Date.now(), gross: l.gross, repair: l.repair,
-      payerType: l.repair > 0 ? type : null, payerId: payer ? payer.id : null, payerName: payer ? payer.name : null, payerOwn: payerOwn,
-      distributed: share * act.length + (payer ? l.repair : 0), share: share, count: act.length, ids: ids, names: names, carryBefore: carryBefore
-    };
-    state.entries.push(entry);
-    freshEntry = entry.n;
-    $('amount').value = ''; $('repair').value = ''; $('amount').focus();
-    save(); render(); showResult(entry);
-    toast('Dividido: ' + fmt(share) + ' para cada');
-  });
-
-  $('undo').addEventListener('click', async function () {
-    var e = state.entries[state.entries.length - 1];
-    if (!e) return;
-    if (!(await ask('Desfazer o último loot?', 'O loot #' + e.n + ' (' + fmt(e.gross) + ') será removido e os saldos voltam ao que eram antes.', 'Desfazer', true))) return;
-    state.entries.pop();
-    state.members.forEach(function (m) { if (e.ids.indexOf(m.id) !== -1) m.total -= e.share; });
-    if (e.payerId) state.members.forEach(function (m) { if (m.id === e.payerId) m.total -= e.repair; });
-    else if (e.repair > 0 && e.payerType === 'guild') state.guildTotal -= e.repair;
-    state.carry = e.carryBefore;
-    $('result').hidden = true;
-    save(); render();
-  });
-
-  function copyText(text, okMsg) {
-    var manual = function () {
-      openModal({ title: 'Copie manualmente', text: 'O navegador bloqueou a cópia automática. Selecione e copie o texto abaixo.', box: text, ok: 'Fechar', hideCancel: true });
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { toast(okMsg); }, manual);
-    } else { manual(); }
-  }
-
-  function summaryOf(sp, i) {
-    var lines = [splitName(i)];
-    sp.members.forEach(function (m) { lines.push(m.name + ': ' + fmt(m.total)); });
-    if (!sp.members.length) lines.push('Sem jogadores');
-    if (sp.guildTotal) lines.push('Guilda (reparo): ' + fmt(sp.guildTotal));
-    lines.push('Total distribuído: ' + fmt(distOf(sp)));
-    return lines.join('\n');
-  }
-  $('copy').addEventListener('click', function () {
-    copyText(summaryOf(state, root.active), 'Resumo do ' + splitName(root.active) + ' copiado');
-  });
-  $('copyAll').addEventListener('click', function () {
-    copyText(root.splits.map(summaryOf).join('\n\n'), 'Resumo de todos os splits copiado');
-  });
-
-  $('resetValues').addEventListener('click', async function () {
-    if (!(await ask('Zerar valores do ' + splitName(root.active) + '?', 'Os jogadores continuam na lista, mas saldos, histórico, sobra e contadores deste split voltam a zero. Não dá para desfazer.', 'Zerar valores', true))) return;
-    state.members.forEach(function (m) { m.total = 0; m.since = 0; });
-    state.entries = []; state.donations = []; state.carry = 0; state.guildTotal = 0;
-    $('result').hidden = true;
-    save(); render(); toast('Valores zerados');
-  });
-
-  $('reset').addEventListener('click', async function () {
-    if (!(await ask('Zerar tudo do ' + splitName(root.active) + '?', 'Jogadores, valores e histórico deste split serão apagados. Os outros splits não mudam. Não dá para desfazer.', 'Zerar tudo', true))) return;
-    state = blank(); root.splits[root.active] = state;
-    shown = {}; $('result').hidden = true;
-    save(); render(); toast('Tudo zerado');
-  });
-
-  $('repairToggle').addEventListener('click', function () { setRepair(!repairOpen); });
-  $('amount').addEventListener('input', updatePreview);
-  $('repair').addEventListener('input', updatePreview);
-  $('payer').addEventListener('change', updatePreview);
-  $('payerType').addEventListener('change', function () { refreshPayer(); updatePreview(); });
-
-  // ---------- Compartilhar / importar ----------
-  function bytesToB64(bytes) {
-    var bin = '';
-    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
-  function b64ToBytes(b) {
-    b = b.replace(/-/g, '+').replace(/_/g, '/');
-    while (b.length % 4) b += '=';
-    var bin = atob(b), arr = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    return arr;
-  }
-  async function pipeBytes(bytes, stream) {
-    var out = new Blob([bytes]).stream().pipeThrough(stream);
-    return new Uint8Array(await new Response(out).arrayBuffer());
-  }
-  async function encodeState() {
-    var bytes = new TextEncoder().encode(JSON.stringify(root));
-    if (window.CompressionStream) return 'z.' + bytesToB64(await pipeBytes(bytes, new CompressionStream('gzip')));
-    return 'p.' + bytesToB64(bytes);
-  }
-  async function decodeText(text) {
-    text = String(text).trim();
-    if (!text) throw new Error('vazio');
-    if (text.charAt(0) === '{') return JSON.parse(text);
-    var m = text.match(/d=([A-Za-z0-9_\-.]+)/);
-    var code = m ? m[1] : text;
-    var kind = code.slice(0, 2), body = code.slice(2);
-    if (kind === 'p.') return JSON.parse(new TextDecoder().decode(b64ToBytes(body)));
-    if (kind === 'z.') {
-      if (!window.DecompressionStream) throw new Error('navegador sem suporte');
-      return JSON.parse(new TextDecoder().decode(await pipeBytes(b64ToBytes(body), new DecompressionStream('gzip'))));
-    }
-    throw new Error('formato');
-  }
-  function sanitizeSplit(o) {
-    if (!o || !Array.isArray(o.members) || !Array.isArray(o.entries)) throw new Error('formato');
-    var num = function (x) { x = Number(x); return isFinite(x) ? x : 0; };
-    var members = o.members.map(function (m, i) {
-      return { id: num(m.id) || i + 1, name: String(m.name || '').slice(0, 32), active: !!m.active, total: num(m.total), since: num(m.since) };
-    }).filter(function (m) { return m.name; });
-    var entries = o.entries.map(function (e) {
-      return {
-        n: num(e.n), time: num(e.time), gross: num(e.gross), repair: num(e.repair),
-        payerType: e.payerType === 'guild' || e.payerType === 'player' ? e.payerType : null,
-        payerId: e.payerId == null ? null : num(e.payerId),
-        payerName: e.payerName ? String(e.payerName).slice(0, 32) : null,
-        payerOwn: num(e.payerOwn), distributed: num(e.distributed), share: num(e.share), count: num(e.count),
-        ids: Array.isArray(e.ids) ? e.ids.map(num) : [],
-        names: Array.isArray(e.names) ? e.names.map(function (x) { return String(x).slice(0, 32); }) : [],
-        carryBefore: num(e.carryBefore)
-      };
-    });
-    var maxId = members.reduce(function (a, m) { return Math.max(a, m.id); }, 0);
-    var donations = (Array.isArray(o.donations) ? o.donations : []).map(function (d) {
-      return { time: num(d.time), fromId: num(d.fromId), fromName: String(d.fromName || '').slice(0, 32),
-        toId: num(d.toId), toName: String(d.toName || '').slice(0, 32), amount: num(d.amount) };
-    });
-    return { members: members, entries: entries, donations: donations, carry: num(o.carry), guildTotal: num(o.guildTotal), nextId: Math.max(num(o.nextId), maxId + 1) };
-  }
-  function sanitizeRoot(o) {
-    if (o && Array.isArray(o.splits)) {
-      var sp = o.splits.slice(0, MAX).map(sanitizeSplit);
-      while (sp.length < MIN) sp.push(blank());
-      return { splits: sp, active: Math.min(Math.max(Math.floor(Number(o.active)) || 0, 0), sp.length - 1) };
-    }
-    return { splits: [sanitizeSplit(o), blank(), blank()], active: 0 };
-  }
-  function countAll(r) {
-    var m = 0, e = 0;
-    r.splits.forEach(function (x) { m += x.members.length; e += x.entries.length; });
-    return { m: m, e: e };
-  }
-  async function applyImport(data) {
-    var next = sanitizeRoot(data);
-    var cur = countAll(root), inc = countAll(next);
-    if (cur.m || cur.e) {
-      if (!(await ask('Importar registro?', 'Isso substitui todos os splits atuais (' + cur.m + ' jogadores, ' + cur.e +
-        ' loots) por ' + next.splits.length + ' splits com ' + inc.m + ' jogadores e ' + inc.e + ' loots.', 'Importar', true))) return false;
-    }
-    root = next; state = root.splits[root.active]; shown = {}; $('result').hidden = true;
-    save(); render();
-    return true;
-  }
-  function shareMsg(t) { $('shareMsg').textContent = t || ''; }
-
-  $('shareLink').addEventListener('click', async function () {
-    shareMsg('');
-    try { copyText(location.href.split('#')[0] + '#d=' + await encodeState(), 'Link copiado'); }
-    catch (e) { shareMsg('Não foi possível gerar o link.'); }
-  });
-  $('shareCode').addEventListener('click', async function () {
-    shareMsg('');
-    try { copyText(await encodeState(), 'Código copiado'); }
-    catch (e) { shareMsg('Não foi possível gerar o código.'); }
-  });
-  $('shareFile').addEventListener('click', function () {
-    var d = new Date(), pad = function (n) { return ('0' + n).slice(-2); };
-    var name = 'loot-split-' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '.json';
-    var url = URL.createObjectURL(new Blob([JSON.stringify(root, null, 1)], { type: 'application/json' }));
-    var a = document.createElement('a'); a.href = url; a.download = name;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-  });
-  $('importBtn').addEventListener('click', async function () {
-    shareMsg('');
-    try {
-      if (await applyImport(await decodeText($('importBox').value))) { $('importBox').value = ''; toast('Registro importado'); }
-    } catch (e) { shareMsg('Não consegui ler esse link, código ou arquivo. Confira se foi copiado inteiro.'); }
-  });
-  function handleFile(f, input) {
-    if (!f) return;
-    var r = new FileReader();
-    r.onload = async function () {
-      shareMsg('');
-      try { if (await applyImport(await decodeText(r.result))) toast('Registro importado'); }
-      catch (e) { shareMsg('Arquivo inválido.'); }
-      if (input) input.value = '';
-    };
-    r.readAsText(f);
-  }
-  $('importFile').addEventListener('change', function () { handleFile(this.files && this.files[0], this); });
-  var drop = $('drop');
-  ['dragenter', 'dragover'].forEach(function (n) {
-    drop.addEventListener(n, function (ev) { ev.preventDefault(); drop.classList.add('over'); });
-  });
-  ['dragleave', 'drop'].forEach(function (n) {
-    drop.addEventListener(n, function (ev) { ev.preventDefault(); drop.classList.remove('over'); });
-  });
-  drop.addEventListener('drop', function (ev) { handleFile(ev.dataTransfer && ev.dataTransfer.files[0]); });
-
-  function bindHead(headId, bodyId) {
-    var hd = $(headId), body = $(bodyId);
-    hd.addEventListener('click', function () {
-      var open = !body.classList.contains('open');
-      body.classList.toggle('open', open);
-      hd.setAttribute('aria-expanded', String(open));
-    });
-  }
-  bindHead('importHead', 'importBody');
-  bindHead('donateHead', 'donateBody');
-
-  // ---------- Splits (menu lateral) ----------
-  function splitName(i) { return 'Split ' + (i + 1) + '#'; }
-  function distOf(sp) { return sp.entries.reduce(function (a, e) { return a + e.distributed; }, 0); }
-
-  function renderSide() {
-    var nav = $('splitNav'); nav.innerHTML = '';
-    var all = 0;
-    root.splits.forEach(function (sp, i) {
-      var tot = distOf(sp), n = sp.members.length; all += tot;
-      nav.appendChild(h('button', { class: 'sp' + (i === root.active ? ' active' : ''), 'aria-current': i === root.active ? 'true' : 'false',
-        onclick: function () { switchSplit(i); } }, [
-        h('span', { class: 'sp-name', text: splitName(i) }),
-        h('span', { class: 'sp-amt', text: fmt(tot) }),
-        h('span', { class: 'sp-meta', text: n + (n === 1 ? ' jogador' : ' jogadores') })
+    function updatePreview() {
+      var box = $('preview'); box.innerHTML = '';
+      var hint = function (t) { box.appendChild(h('p', { class: 'pv-hint', text: t })); };
+      var l = readLoot();
+      if (isNaN(l.gross) || l.gross <= 0) { hint('Digite a prata do conteúdo para ver como fica a divisão.'); return; }
+      var n = activeMembers().length;
+      if (!n) { hint('Nenhum jogador ativo. Adicione jogadores na aba Jogadores.'); return; }
+      if (isNaN(l.repair)) { hint('Valor do reparo inválido.'); return; }
+      var byPlayer = l.repair > 0 && $('payerType').value === 'player';
+      if (byPlayer && l.repair > l.gross) { hint('O reparo é maior que o loot.'); return; }
+      var share = Math.floor((l.gross - (byPlayer ? l.repair : 0) + state.carry) / n);
+      box.appendChild(h('div', { class: 'pv-big' }, [
+        h('b', { text: fmt(share) }),
+        h('span', { text: 'para cada um dos ' + n + (n === 1 ? ' ativo' : ' ativos') })
       ]));
+      var lines = [];
+      if (l.repair > 0 && !byPlayer) lines.push('Reparo de ' + fmt(l.repair) + ' pago pela guilda, sem desconto dos membros.');
+      if (byPlayer) {
+        var pct = (100 / n).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+        lines.push('Reparo de ' + fmt(l.repair) + ': cada um arca com ' + fmt(l.repair / n) + ' (' + pct + '%).');
+        var m = state.members.filter(function (x) { return String(x.id) === $('payer').value; })[0];
+        if (m) {
+          var own = m.active ? Math.floor(l.repair / n) : 0;
+          lines.push(m.name + ' recebe ' + fmt(share + l.repair) + ': loot ' + fmt(share + own) + ' + reembolso ' + fmt(l.repair - own) +
+            ' (só a parte dos outros; a dele, ' + fmt(own) + ', já fica descontada).');
+        }
+      }
+      if (state.carry > 0) lines.push('Inclui ' + fmt(state.carry) + ' de sobra do loot anterior.');
+      if (lines.length) box.appendChild(h('ul', { class: 'pv-lines' }, lines.map(function (t) { return h('li', { text: t }); })));
+    }
+
+    function showResult(e) {
+      var r = $('result'); r.innerHTML = '';
+      r.appendChild(h('b', { text: 'Loot #' + e.n + ' dividido' }));
+      r.appendChild(h('p', { text: 'Cada um dos ' + e.count + ' recebeu ' + fmt(e.share) + ' de prata.' }));
+      if (e.payerId) r.appendChild(h('p', { text: e.payerName + ' recebe ' + fmt(e.share + e.repair) + ' (inclui o reembolso do reparo).' }));
+      else if (e.repair > 0) r.appendChild(h('p', { text: 'Reparo de ' + fmt(e.repair) + ' pago pela guilda.' }));
+      r.hidden = false; r.classList.remove('pop'); void r.offsetWidth; r.classList.add('pop');
+    }
+
+    // ---------- Render ----------
+    function hue(name) { var x = 0; for (var i = 0; i < name.length; i++) x = (x * 31 + name.charCodeAt(i)) % 360; return x; }
+
+    function render() {
+      renderSide();
+      var act = activeMembers().length;
+      setNum($('sTotal'), 'sTotal', state.entries.reduce(function (a, e) { return a + e.distributed; }, 0));
+      setNum($('sActive'), 'sActive', act);
+      setNum($('sPaused'), 'sPaused', state.members.length - act);
+      setNum($('sCarry'), 'sCarry', state.carry);
+      setNum($('sGuild'), 'sGuild', state.guildTotal);
+      $('bPlayers').textContent = state.members.length;
+      $('bHistory').textContent = state.entries.length;
+
+      var ul = $('members'); ul.innerHTML = '';
+      state.members.forEach(function (m) {
+        var bal = h('div', { class: 'bal' }); setNum(bal, 'm' + m.id, m.total);
+        ul.appendChild(h('li', { class: 'm' + (m.active ? '' : ' paused') + (m.id === freshMember ? ' fresh' : '') }, [
+          h('div', { class: 'av', text: m.name.charAt(0).toUpperCase(), style: 'background:hsl(' + hue(m.name) + ' 35% 38%)' }),
+          h('div', { class: 'info' }, [
+            h('div', { class: 'nick' }, [h('span', { text: m.name }), h('span', { class: 'pill ' + (m.active ? 'on' : 'off'), text: m.active ? 'ativo' : 'pausado' })]),
+            h('div', { class: 'meta', text: m.since === 0 ? 'desde o início' : 'entrou após o loot #' + m.since })
+          ]),
+          bal,
+          donateBtn(m),
+          h('button', { class: 'switch', role: 'switch', 'aria-checked': String(m.active),
+            'aria-label': (m.active ? 'Pausar ' : 'Retomar ') + m.name, title: m.active ? 'Pausar' : 'Voltar ao conteúdo',
+            onclick: function () { toggle(m.id); } }),
+          h('button', { class: 'x', 'aria-label': 'Remover ' + m.name, title: 'Remover', text: '×', onclick: function () { removeMember(m.id); } })
+        ]));
+      });
+      freshMember = null;
+      $('membersEmpty').hidden = state.members.length > 0;
+
+      var hist = $('history'); hist.innerHTML = '';
+      state.entries.slice().reverse().forEach(function (e) {
+        var d = new Date(e.time);
+        var hh = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+        var lines = entryLines(e);
+        hist.appendChild(h('details', { class: 'entry' + (e.n === freshEntry ? ' fresh' : '') }, [
+          h('summary', {}, [
+            h('span', { class: 'no', text: '#' + e.n }),
+            h('span', { class: 'time', text: hh }),
+            h('span', { class: 'amt', text: fmt(e.gross) }),
+            h('span', { class: 'each', text: fmt(e.share) + ' cada' }),
+            h('span', { class: 'chev', text: '›', 'aria-hidden': 'true' })
+          ]),
+          h('div', { class: 'body' }, lines.map(function (t) { return h('div', { text: t }); }).concat([
+            h('div', { class: 'bar', style: 'margin-top:8px' }, [
+              h('button', { class: 'small', text: 'Copiar p/ Discord', onclick: function () { copyText(discordEntry(e).join('\n'), 'Loot #' + e.n + ' copiado'); } }),
+              h('button', { class: 'small', text: 'Enviar ao Discord', onclick: function () { sendDiscord(embedEntry(e), 'Loot #' + e.n + ' enviado ao Discord'); } })
+            ])
+          ]))
+        ]));
+      });
+      freshEntry = null;
+
+      var dl = $('donList'); dl.innerHTML = '';
+      state.donations.slice().reverse().forEach(function (d, i) {
+        var dt = new Date(d.time);
+        var hh2 = ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2);
+        dl.appendChild(h('div', { class: 'don' + (d.time === freshDon ? ' fresh' : '') }, [
+          h('div', { class: 'info' }, [
+            h('div', { class: 'nick', text: d.fromName + ' doou para ' + d.toName }),
+            h('div', { class: 'meta', text: hh2 })
+          ]),
+          h('div', { class: 'bal', text: fmt(d.amount) }),
+          i === 0 ? h('button', { class: 'small', text: 'Desfazer', onclick: undoDonation }) : null
+        ]));
+      });
+      freshDon = null;
+      $('donSection').hidden = !state.donations.length;
+      $('historyEmpty').hidden = state.entries.length > 0;
+      $('undo').disabled = !state.entries.length;
+      $('copy').disabled = !state.members.length;
+      $('copyAll').disabled = !root.splits.some(function (x) { return x.members.length; });
+      $('dCopy').disabled = $('dSend').disabled = !state.members.length;
+      $('dSendAll').disabled = $('copyAll').disabled;
+      refreshPayer();
+      refreshDonate();
+      renderGuild();
+      updatePreview();
+      moveInd();
+    }
+
+    // ---------- Doação entre jogadores ----------
+    var COIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v11"/><path d="M14.8 9.3c-.4-.9-1.4-1.4-2.8-1.4-1.6 0-2.7.8-2.7 1.9 0 2.6 5.6 1.2 5.6 4 0 1.1-1.1 1.9-2.9 1.9-1.4 0-2.5-.6-2.9-1.5"/></svg>';
+    function donateBtn(m) {
+      var b = h('button', { class: 'x coin', 'aria-label': 'Doar prata de ' + m.name, title: 'Doar', onclick: function () { openDM(m.id); } });
+      b.innerHTML = COIN;
+      return b;
+    }
+    function openDM(fromId) {
+      if (state.members.length < 2) { toast('Precisa de pelo menos 2 jogadores para doar.'); return; }
+      refreshDonate();
+      $('donFrom').value = fromId;
+      if ($('donTo').value === $('donFrom').value) {
+        var other = state.members.filter(function (x) { return x.id !== fromId; })[0];
+        if (other) $('donTo').value = other.id;
+      }
+      updateDonHint();
+      $('donMsg').textContent = ''; $('donAmount').value = '';
+      dmFocus = document.activeElement;
+      $('dm').hidden = false;
+      setTimeout(function () { $('donAmount').focus(); }, 0);
+    }
+    function closeDM() {
+      $('dm').hidden = true;
+      if (dmFocus && dmFocus.focus) dmFocus.focus();
+    }
+    var dmFocus = null;
+    $('dmClose').addEventListener('click', closeDM);
+    $('dm').addEventListener('mousedown', function (ev) { if (ev.target === $('dm')) closeDM(); });
+    $('dm').addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { ev.preventDefault(); closeDM(); } });
+
+    function memberById(v) { return state.members.filter(function (x) { return String(x.id) === String(v); })[0]; }
+
+    function refreshDonate() {
+      var f = $('donFrom'), t = $('donTo'), pf = f.value, pt = t.value;
+      [f, t].forEach(function (sel) {
+        sel.innerHTML = '';
+        state.members.forEach(function (m) {
+          var o = document.createElement('option'); o.value = m.id; o.textContent = m.name; sel.appendChild(o);
+        });
+      });
+      if (pf) f.value = pf;
+      if (pt) t.value = pt;
+      if (f.value === t.value && state.members.length > 1) {
+        var other = state.members.filter(function (m) { return String(m.id) !== f.value; })[0];
+        if (other) t.value = other.id;
+      }
+      updateDonHint();
+    }
+
+    function updateDonHint() {
+      var m = memberById($('donFrom').value);
+      $('donHint').textContent = m ? 'Saldo de ' + m.name + ': ' + fmt(m.total) : 'Adicione jogadores para poder doar.';
+    }
+
+    async function undoDonation() {
+      var d = state.donations[state.donations.length - 1];
+      if (!d) return;
+      if (!(await ask('Desfazer doação?', d.fromName + ' doou ' + fmt(d.amount) + ' para ' + d.toName + '. O valor volta para ' + d.fromName + '.', 'Desfazer', true))) return;
+      state.donations.pop();
+      state.members.forEach(function (m) {
+        if (m.id === d.fromId) m.total += d.amount;
+        if (m.id === d.toId) m.total -= d.amount;
+      });
+      save(); render();
+    }
+
+    $('donFrom').addEventListener('change', updateDonHint);
+    $('donAll').addEventListener('click', function () {
+      var m = memberById($('donFrom').value);
+      if (m && m.total > 0) $('donAmount').value = fmt(m.total);
     });
-    setNum($('sAll'), 'sAll', all);
-    $('curSplit').textContent = splitName(root.active);
-    $('addSplit').hidden = root.splits.length >= MAX;
-    $('addSplit').textContent = '+ Criar ' + splitName(root.splits.length);
-    var canDel = root.splits.length > MIN;
-    $('delSplit').hidden = !canDel;
-    if (canDel) $('delSplit').textContent = 'Remover ' + splitName(root.splits.length - 1);
-  }
+    $('donateForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var msg = $('donMsg'); msg.textContent = '';
+      var from = memberById($('donFrom').value), to = memberById($('donTo').value);
+      var amount = parseSilver($('donAmount').value);
+      if (!from || !to) { msg.textContent = 'Escolha os dois jogadores.'; return; }
+      if (from.id === to.id) { msg.textContent = 'Escolha jogadores diferentes.'; return; }
+      if (isNaN(amount) || amount <= 0) { msg.textContent = 'Valor inválido. Use por exemplo 100.000, 100k ou 1.5m.'; return; }
+      if (amount > from.total) { msg.textContent = from.name + ' só tem ' + fmt(from.total) + ' de saldo.'; return; }
+      from.total -= amount; to.total += amount;
+      var d = { time: Date.now(), fromId: from.id, fromName: from.name, toId: to.id, toName: to.name, amount: amount };
+      state.donations.push(d); freshDon = d.time;
+      $('donAmount').value = '';
+      save(); render();
+      closeDM();
+      toast(from.name + ' doou ' + fmt(amount) + ' para ' + to.name);
+    });
 
-  function switchSplit(i) {
-    if (i === root.active || !root.splits[i]) return;
-    root.active = i; state = root.splits[i]; shown = {};
-    freshMember = freshEntry = freshDon = null;
-    $('result').hidden = true;
-    ['lootMsg', 'memberMsg', 'donMsg'].forEach(function (id) { $(id).textContent = ''; });
-    $('amount').value = ''; $('repair').value = ''; $('donAmount').value = '';
-    save(); render();
-    var c = $('content'); c.classList.remove('swap'); void c.offsetWidth; c.classList.add('swap');
-  }
+    function toggle(id) {
+      state.members.forEach(function (m) { if (m.id === id) m.active = !m.active; });
+      save(); render();
+    }
 
-  $('addSplit').addEventListener('click', function () {
-    if (root.splits.length >= MAX) return;
-    root.splits.push(blank());
-    switchSplit(root.splits.length - 1);
-    toast(splitName(root.active) + ' criado');
-  });
+    async function removeMember(id) {
+      var m = state.members.filter(function (x) { return x.id === id; })[0];
+      if (!m) return;
+      var extra = m.total ? ' Ele(a) tem ' + fmt(m.total) + ' de prata acumulada, que será perdida.' : '';
+      if (!(await ask('Remover ' + m.name + '?', 'O jogador sai da lista.' + extra, 'Remover', true))) return;
+      state.members = state.members.filter(function (x) { return x.id !== id; });
+      save(); render();
+    }
 
-  $('delSplit').addEventListener('click', async function () {
-    if (root.splits.length <= MIN) return;
-    var i = root.splits.length - 1, sp = root.splits[i];
-    var has = sp.members.length || sp.entries.length;
-    if (!(await ask('Remover ' + splitName(i) + '?',
-      has ? 'Jogadores, valores e histórico deste split serão apagados. Não dá para desfazer.' : 'Este split está vazio e será removido.', 'Remover', true))) return;
-    root.splits.pop();
-    if (root.active > root.splits.length - 1) root.active = root.splits.length - 1;
-    state = root.splits[root.active]; shown = {};
-    save(); render(); toast(splitName(i) + ' removido');
-  });
+    $('memberForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var name = $('nick').value.trim();
+      var msg = $('memberMsg'); msg.textContent = '';
+      if (!name) return;
+      var dup = state.members.some(function (m) { return m.name.toLowerCase() === name.toLowerCase(); });
+      if (dup) { msg.textContent = 'Esse nick já está na lista.'; return; }
+      freshMember = state.nextId;
+      state.members.push({ id: state.nextId++, name: name, active: true, total: 0, since: state.entries.length });
+      $('nick').value = ''; $('nick').focus();
+      save(); render();
+    });
 
-  render();
-  showTab('split');
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveInd);
+    $('lootForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var msg = $('lootMsg'); msg.textContent = '';
+      var l = readLoot();
+      if (isNaN(l.gross) || l.gross <= 0) { msg.textContent = 'Valor inválido. Use por exemplo 1.500.000, 1.5m ou 250k.'; return; }
+      if (isNaN(l.repair)) { msg.textContent = 'Valor do reparo inválido.'; return; }
+      var type = $('payerType').value;
+      if (l.repair > 0 && type === 'player' && l.repair > l.gross) { msg.textContent = 'O reparo não pode ser maior que o loot.'; return; }
+      var act = activeMembers();
+      if (!act.length) { msg.textContent = 'Nenhum jogador ativo. Adicione jogadores na aba Jogadores.'; return; }
+      var payer = null;
+      if (l.repair > 0 && type === 'player') {
+        payer = state.members.filter(function (m) { return String(m.id) === $('payer').value; })[0];
+        if (!payer) { msg.textContent = 'Escolha o jogador que pagou o reparo.'; return; }
+      }
+      var pool = l.gross - (payer ? l.repair : 0) + state.carry;
+      var share = Math.floor(pool / act.length);
+      var carryBefore = state.carry;
+      state.carry = pool - share * act.length;
+      var ids = [], names = [];
+      act.forEach(function (m) { m.total += share; ids.push(m.id); names.push(m.name); });
+      var payerOwn = payer && ids.indexOf(payer.id) !== -1 ? Math.floor(l.repair / act.length) : 0;
+      if (payer) payer.total += l.repair;
+      else if (l.repair > 0) state.guildTotal += l.repair;
+      var entry = {
+        n: state.entries.length + 1, time: Date.now(), gross: l.gross, repair: l.repair,
+        payerType: l.repair > 0 ? type : null, payerId: payer ? payer.id : null, payerName: payer ? payer.name : null, payerOwn: payerOwn,
+        distributed: share * act.length + (payer ? l.repair : 0), share: share, count: act.length, ids: ids, names: names, carryBefore: carryBefore
+      };
+      state.entries.push(entry);
+      freshEntry = entry.n;
+      $('amount').value = ''; $('repair').value = ''; $('amount').focus();
+      save(); render(); showResult(entry);
+      toast('Dividido: ' + fmt(share) + ' para cada');
+    });
 
-  // Abre link compartilhado (#d=...)
-  if (/^#d=/.test(location.hash)) {
-    decodeText(location.hash).then(function (data) {
-      return applyImport(data);
-    }).catch(function () { shareMsg('O link compartilhado não pôde ser lido.'); })
-      .then(function () { history.replaceState(null, '', location.pathname + location.search); });
-  }
-})();
-</script>
-</body>
-</html>
+    $('undo').addEventListener('click', async function () {
+      var e = state.entries[state.entries.length - 1];
+      if (!e) return;
+      if (!(await ask('Desfazer o último loot?', 'O loot #' + e.n + ' (' + fmt(e.gross) + ') será removido e os saldos voltam ao que eram antes.', 'Desfazer', true))) return;
+      state.entries.pop();
+      state.members.forEach(function (m) { if (e.ids.indexOf(m.id) !== -1) m.total -= e.share; });
+      if (e.payerId) state.members.forEach(function (m) { if (m.id === e.payerId) m.total -= e.repair; });
+      else if (e.repair > 0 && e.payerType === 'guild') state.guildTotal -= e.repair;
+      state.carry = e.carryBefore;
+      $('result').hidden = true;
+      save(); render();
+    });
+
+    function copyText(text, okMsg) {
+      var manual = function () {
+        openModal({ title: 'Copie manualmente', text: 'O navegador bloqueou a cópia automática. Selecione e copie o texto abaixo.', box: text, ok: 'Fechar', hideCancel: true });
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { toast(okMsg); }, manual);
+      } else { manual(); }
+    }
+
+    function summaryOf(sp, i) {
+      var lines = [splitName(i)];
+      sp.members.forEach(function (m) { lines.push(m.name + ': ' + fmt(m.total)); });
+      if (!sp.members.length) lines.push('Sem jogadores');
+      if (sp.guildTotal) lines.push('Guilda (reparo): ' + fmt(sp.guildTotal));
+      lines.push('Total distribuído: ' + fmt(distOf(sp)));
+      return lines.join('\n');
+    }
+    $('copy').addEventListener('click', function () {
+      copyText(summaryOf(state, root.active), 'Resumo do ' + splitName(root.active) + ' copiado');
+    });
+    $('copyAll').addEventListener('click', function () {
+      copyText(root.splits.map(summaryOf).join('\n\n'), 'Resumo de todos os splits copiado');
+    });
+
+    function entryLines(e) {
+        var own = e.payerOwn || 0;
+        var lines = ['Dividido entre ' + e.count + (e.count === 1 ? ' jogador' : ' jogadores') + (e.names && e.names.length ? ': ' + e.names.join(', ') : '') + '.'];
+        if (e.repair) {
+          if (e.payerType === 'guild') lines.push('Reparo de ' + fmt(e.repair) + ' pago pela guilda, sem desconto dos membros.');
+          else {
+            lines.push('Reparo de ' + fmt(e.repair) + ' pago por ' + e.payerName + '; cada um arca com ' + fmt(e.repair / e.count) + '.');
+            lines.push(e.payerName + ' recebe ' + fmt(e.share + e.repair) + ' = loot ' + fmt(e.share + own) + ' + reembolso ' + fmt(e.repair - own) +
+              ' (só a parte dos outros; a dele, ' + fmt(own) + ', já descontada).');
+          }
+        }
+      return lines;
+    }
+
+    // ---------- Discord ----------
+    var WH_KEY = 'albion-discord-webhook';
+    var DEFAULT_WH = 'https://discord.com/api/webhooks/1572279617677561988/cCZn5fb97YfDyQlsqYcmYLedkjxqhJ0Z7oo57Ep2lLSE4OBOx9jZbAPgAw2APCyGEr-m';
+    var WH_RE = /^https:\/\/(?:(?:canary|ptb)\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+$/;
+    function getWH() { try { return localStorage.getItem(WH_KEY) || DEFAULT_WH; } catch (e) { return DEFAULT_WH; } }
+    function setWH(v) { try { if (v) localStorage.setItem(WH_KEY, v); else localStorage.removeItem(WH_KEY); } catch (e) {} }
+    function dmsg(t) { $('dMsg').textContent = t || ''; }
+    function hhmm(t) { var d = new Date(t); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+
+    // Monta mensagens com bloco de código (evita que _ e * dos nicks virem formatação) e respeita o limite de 2000 caracteres.
+    function discordPack(title, lines) {
+      var out = [], cur = [], len = 0, first = true;
+      function flush() { out.push((first ? title + '\n' : '') + '```\n' + cur.join('\n') + '\n```'); first = false; cur = []; len = 0; }
+      lines.forEach(function (l) {
+        l = String(l).slice(0, 1700);
+        if (len + l.length + 1 > 1700 && cur.length) flush();
+        cur.push(l); len += l.length + 1;
+      });
+      if (cur.length) flush();
+      return out;
+    }
+    function discordSummary(sp, i) {
+      var w = sp.members.reduce(function (a, m) { return Math.max(a, m.name.length); }, 0);
+      var lines = sp.members.map(function (m) { return (m.name + ':').padEnd(w + 1) + ' ' + fmt(m.total); });
+      if (!sp.members.length) lines.push('Sem jogadores');
+      if (sp.guildTotal) lines.push('Guilda (reparo): ' + fmt(sp.guildTotal));
+      lines.push('Total distribuído: ' + fmt(distOf(sp)));
+      return discordPack('**' + splitName(i) + ' • saldos**', lines);
+    }
+    function discordEntry(e) {
+      var lines = ['Total: ' + fmt(e.gross) + ' • Cada um: ' + fmt(e.share)].concat(entryLines(e));
+      return discordPack('**' + splitName(root.active) + ' • Loot #' + e.n + '** (' + hhmm(e.time) + ')', lines);
+    }
+
+    // Versões estilizadas (embeds) usadas no envio ao Discord
+    var BRASS = 0xD3A84C, GREEN = 0x57B77A, MEDALS = ['🥇', '🥈', '🥉'];
+    function nameTag(n) { return '`' + String(n).replace(/`/g, "'") + '`'; }
+    function embedFooter() { return { text: 'Loot Split • Albion Online' }; }
+    function embedSummary(sp, i) {
+      var sorted = sp.members.slice().sort(function (a, b) { return b.total - a.total; });
+      var lines = sorted.map(function (m, k) {
+        return (k < 3 && m.total > 0 ? MEDALS[k] : '▫️') + ' ' + nameTag(m.name) + ' — **' + fmt(m.total) + '**';
+      });
+      if (!lines.length) lines.push('Sem jogadores');
+      var chunks = [], cur = [], len = 0;
+      lines.forEach(function (l) {
+        if (len + l.length + 1 > 3500 && cur.length) { chunks.push(cur); cur = []; len = 0; }
+        cur.push(l); len += l.length + 1;
+      });
+      if (cur.length) chunks.push(cur);
+      return chunks.map(function (c, k) {
+        var emb = { title: '💰 ' + splitName(i) + ' • Saldos' + (k ? ' (cont.)' : ''), description: c.join('\n'), color: BRASS };
+        if (k === chunks.length - 1) {
+          emb.fields = [
+            { name: '💎 Total distribuído', value: fmt(distOf(sp)), inline: true },
+            { name: '👥 Jogadores', value: String(sp.members.length), inline: true }
+          ];
+          if (sp.guildTotal) emb.fields.push({ name: '🏰 Guilda (reparo)', value: fmt(sp.guildTotal), inline: true });
+          emb.footer = embedFooter(); emb.timestamp = new Date().toISOString();
+        }
+        return { embeds: [emb] };
+      });
+    }
+    function embedEntry(e) {
+      var own = e.payerOwn || 0;
+      var fields = [
+        { name: '💎 Total do loot', value: fmt(e.gross), inline: true },
+        { name: '👥 Jogadores', value: String(e.count), inline: true },
+        { name: '🪙 Cada um recebe', value: fmt(e.share), inline: true }
+      ];
+      if (e.repair) {
+        if (e.payerType === 'guild') {
+          fields.push({ name: '🔧 Reparo', value: fmt(e.repair) + ' — pago pela **guilda**, sem desconto dos membros' });
+        } else {
+          fields.push({ name: '🔧 Reparo', value: fmt(e.repair) + ' — pago por ' + nameTag(e.payerName) + '\nCada um arca com **' + fmt(e.repair / e.count) + '**' });
+          fields.push({ name: '↩️ Reembolso', value: nameTag(e.payerName) + ' recebe **' + fmt(e.share + e.repair) + '**\n(loot ' + fmt(e.share + own) + ' + reembolso ' + fmt(e.repair - own) + ')' });
+        }
+      }
+      if (e.names && e.names.length) {
+        var txt = e.names.map(nameTag).join(' ');
+        if (txt.length > 1000) txt = txt.slice(0, 1000) + '…';
+        fields.push({ name: '🧑‍🤝‍🧑 Participantes', value: txt });
+      }
+      return [{ embeds: [{ title: '⚔️ Loot #' + e.n + ' • ' + splitName(root.active), color: GREEN, fields: fields, footer: embedFooter(), timestamp: new Date(e.time).toISOString() }] }];
+    }
+
+    function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+    async function postWH(url, payload) {
+      var opts = { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ username: 'Loot Split', allowed_mentions: { parse: [] } }, payload)) };
+      var r = await fetch(url, opts);
+      if (r.status === 429) {
+        var j = {}; try { j = await r.json(); } catch (e) {}
+        await sleep(((j.retry_after || 1) * 1000) + 150);
+        r = await fetch(url, opts);
+      }
+      if (!r.ok) throw new Error('http ' + r.status);
+    }
+    async function sendDiscord(messages, okMsg) {
+      var url = getWH();
+      if (!WH_RE.test(url)) {
+        $('dCfg').open = true; dmsg('Configure o webhook do canal do Discord primeiro.');
+        $('dUrl').focus(); return;
+      }
+      dmsg('Enviando...');
+      try {
+        for (var i = 0; i < messages.length; i++) { await postWH(url, messages[i]); if (i < messages.length - 1) await sleep(400); }
+        dmsg(''); toast(okMsg);
+      } catch (e) {
+        dmsg('Não consegui enviar ao Discord (' + (e.message || 'erro') + '). Confira se o webhook ainda existe e a internet.');
+      }
+    }
+
+    $('dCopy').addEventListener('click', function () {
+      copyText(discordSummary(state, root.active).join('\n'), 'Resumo para Discord copiado');
+    });
+    $('dSend').addEventListener('click', function () {
+      sendDiscord(embedSummary(state, root.active), 'Resumo enviado ao Discord');
+    });
+    $('dSendAll').addEventListener('click', function () {
+      var msgs = []; root.splits.forEach(function (sp, i) { if (sp.members.length) msgs = msgs.concat(embedSummary(sp, i)); });
+      sendDiscord(msgs, 'Todos os splits enviados ao Discord');
+    });
+    $('dSave').addEventListener('click', function () {
+      var v = $('dUrl').value.trim();
+      if (!WH_RE.test(v)) { dmsg('Essa URL não parece um webhook do Discord (https://discord.com/api/webhooks/...).'); return; }
+      setWH(v); $('dUrl').value = ''; $('dCfg').open = false; dmsg(''); toast('Webhook salvo');
+    });
+    $('dTest').addEventListener('click', function () {
+      var typed = $('dUrl').value.trim();
+      if (typed) { if (!WH_RE.test(typed)) { dmsg('Essa URL não parece um webhook do Discord.'); return; } setWH(typed); $('dUrl').value = ''; }
+      sendDiscord([{ embeds: [{ title: '✅ Webhook conectado', description: 'Se você está vendo isso, o Loot Split consegue postar neste canal.', color: GREEN, footer: embedFooter(), timestamp: new Date().toISOString() }] }], 'Teste enviado');
+    });
+    $('dRemove').addEventListener('click', function () { setWH(''); $('dUrl').value = ''; dmsg(''); toast('Canal padrão restaurado'); });
+
+    $('resetValues').addEventListener('click', async function () {
+      if (!(await ask('Zerar valores do ' + splitName(root.active) + '?', 'Os jogadores continuam na lista, mas saldos, histórico, sobra e contadores deste split voltam a zero. Não dá para desfazer.', 'Zerar valores', true))) return;
+      state.members.forEach(function (m) { m.total = 0; m.since = 0; });
+      state.entries = []; state.donations = []; state.carry = 0; state.guildTotal = 0;
+      $('result').hidden = true;
+      save(); render(); toast('Valores zerados');
+    });
+
+    $('reset').addEventListener('click', async function () {
+      if (!(await ask('Zerar tudo do ' + splitName(root.active) + '?', 'Jogadores, valores e histórico deste split serão apagados. Os outros splits não mudam. Não dá para desfazer.', 'Zerar tudo', true))) return;
+      state = blank(); root.splits[root.active] = state;
+      shown = {}; $('result').hidden = true;
+      save(); render(); toast('Tudo zerado');
+    });
+
+    $('repairToggle').addEventListener('click', function () { setRepair(!repairOpen); });
+    $('amount').addEventListener('input', updatePreview);
+    $('repair').addEventListener('input', updatePreview);
+    $('payer').addEventListener('change', updatePreview);
+    $('payerType').addEventListener('change', function () { refreshPayer(); updatePreview(); });
+
+    // ---------- Compartilhar / importar ----------
+    function bytesToB64(bytes) {
+      var bin = '';
+      for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+    function b64ToBytes(b) {
+      b = b.replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      var bin = atob(b), arr = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return arr;
+    }
+    async function pipeBytes(bytes, stream) {
+      var out = new Blob([bytes]).stream().pipeThrough(stream);
+      return new Uint8Array(await new Response(out).arrayBuffer());
+    }
+    async function encodeState() {
+      var bytes = new TextEncoder().encode(JSON.stringify(root));
+      if (window.CompressionStream) return 'z.' + bytesToB64(await pipeBytes(bytes, new CompressionStream('gzip')));
+      return 'p.' + bytesToB64(bytes);
+    }
+    async function decodeText(text) {
+      text = String(text).trim();
+      if (!text) throw new Error('vazio');
+      if (text.charAt(0) === '{') return JSON.parse(text);
+      var m = text.match(/d=([A-Za-z0-9_\-.]+)/);
+      var code = m ? m[1] : text;
+      var kind = code.slice(0, 2), body = code.slice(2);
+      if (kind === 'p.') return JSON.parse(new TextDecoder().decode(b64ToBytes(body)));
+      if (kind === 'z.') {
+        if (!window.DecompressionStream) throw new Error('navegador sem suporte');
+        return JSON.parse(new TextDecoder().decode(await pipeBytes(b64ToBytes(body), new DecompressionStream('gzip'))));
+      }
+      throw new Error('formato');
+    }
+    function sanitizeSplit(o) {
+      if (!o || !Array.isArray(o.members) || !Array.isArray(o.entries)) throw new Error('formato');
+      var num = function (x) { x = Number(x); return isFinite(x) ? x : 0; };
+      var members = o.members.map(function (m, i) {
+        return { id: num(m.id) || i + 1, name: String(m.name || '').slice(0, 32), active: !!m.active, total: num(m.total), since: num(m.since) };
+      }).filter(function (m) { return m.name; });
+      var entries = o.entries.map(function (e) {
+        return {
+          n: num(e.n), time: num(e.time), gross: num(e.gross), repair: num(e.repair),
+          payerType: e.payerType === 'guild' || e.payerType === 'player' ? e.payerType : null,
+          payerId: e.payerId == null ? null : num(e.payerId),
+          payerName: e.payerName ? String(e.payerName).slice(0, 32) : null,
+          payerOwn: num(e.payerOwn), distributed: num(e.distributed), share: num(e.share), count: num(e.count),
+          ids: Array.isArray(e.ids) ? e.ids.map(num) : [],
+          names: Array.isArray(e.names) ? e.names.map(function (x) { return String(x).slice(0, 32); }) : [],
+          carryBefore: num(e.carryBefore)
+        };
+      });
+      var maxId = members.reduce(function (a, m) { return Math.max(a, m.id); }, 0);
+      var donations = (Array.isArray(o.donations) ? o.donations : []).map(function (d) {
+        return { time: num(d.time), fromId: num(d.fromId), fromName: String(d.fromName || '').slice(0, 32),
+          toId: num(d.toId), toName: String(d.toName || '').slice(0, 32), amount: num(d.amount) };
+      });
+      return { members: members, entries: entries, donations: donations, carry: num(o.carry), guildTotal: num(o.guildTotal), nextId: Math.max(num(o.nextId), maxId + 1) };
+    }
+    function sanitizeRoot(o) {
+      if (o && Array.isArray(o.splits)) {
+        var sp = o.splits.slice(0, MAX).map(sanitizeSplit);
+        while (sp.length < MIN) sp.push(blank());
+        return { splits: sp, active: Math.min(Math.max(Math.floor(Number(o.active)) || 0, 0), sp.length - 1) };
+      }
+      return { splits: [sanitizeSplit(o), blank(), blank()], active: 0 };
+    }
+    function countAll(r) {
+      var m = 0, e = 0;
+      r.splits.forEach(function (x) { m += x.members.length; e += x.entries.length; });
+      return { m: m, e: e };
+    }
+    async function applyImport(data) {
+      var next = sanitizeRoot(data);
+      var cur = countAll(root), inc = countAll(next);
+      if (cur.m || cur.e) {
+        if (!(await ask('Importar registro?', 'Isso substitui todos os splits atuais (' + cur.m + ' jogadores, ' + cur.e +
+          ' loots) por ' + next.splits.length + ' splits com ' + inc.m + ' jogadores e ' + inc.e + ' loots.', 'Importar', true))) return false;
+      }
+      root = next; state = root.splits[root.active]; shown = {}; $('result').hidden = true;
+      save(); render();
+      return true;
+    }
+    function shareMsg(t) { $('shareMsg').textContent = t || ''; }
+
+    $('shareLink').addEventListener('click', async function () {
+      shareMsg('');
+      try { copyText(location.href.split('#')[0] + '#d=' + await encodeState(), 'Link copiado'); }
+      catch (e) { shareMsg('Não foi possível gerar o link.'); }
+    });
+    $('shareCode').addEventListener('click', async function () {
+      shareMsg('');
+      try { copyText(await encodeState(), 'Código copiado'); }
+      catch (e) { shareMsg('Não foi possível gerar o código.'); }
+    });
+
+    // Popup para colar um código
+    var pmFocus = null;
+    function openPM() {
+      pmFocus = document.activeElement;
+      $('pmBox').value = ''; $('pmMsg').textContent = '';
+      $('pm').hidden = false;
+      setTimeout(function () { $('pmBox').focus(); }, 0);
+    }
+    function closePM() {
+      $('pm').hidden = true;
+      if (pmFocus && pmFocus.focus) pmFocus.focus();
+    }
+    $('pasteCode').addEventListener('click', function () { shareMsg(''); openPM(); });
+    $('pmCancel').addEventListener('click', closePM);
+    $('pm').addEventListener('mousedown', function (ev) { if (ev.target === $('pm')) closePM(); });
+    $('pm').addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { ev.preventDefault(); closePM(); } });
+    $('pmOk').addEventListener('click', async function () {
+      var v = $('pmBox').value.trim(), data;
+      if (!v) { $('pmMsg').textContent = 'Cole o código primeiro.'; return; }
+      try { data = await decodeText(v); sanitizeRoot(data); }
+      catch (e) { $('pmMsg').textContent = 'Não consegui ler esse código. Confira se foi copiado inteiro.'; return; }
+      closePM();
+      try { if (await applyImport(data)) toast('Registro importado'); }
+      catch (e) { shareMsg('Não consegui importar esse registro.'); }
+    });
+
+    // ---------- Adicionar jogadores ----------
+    function addNames(names) {
+      var have = {}, added = 0, skipped = 0;
+      state.members.forEach(function (m) { have[m.name.toLowerCase()] = true; });
+      names.forEach(function (raw) {
+        var n = String(raw).trim().slice(0, 32);
+        if (!n) return;
+        var k = n.toLowerCase();
+        if (have[k]) { skipped++; return; }
+        have[k] = true;
+        state.members.push({ id: state.nextId++, name: n, active: true, total: 0, since: state.entries.length });
+        added++;
+      });
+      if (added) { save(); render(); }
+      return { added: added, skipped: skipped };
+    }
+
+    // ---------- Guilda (API do Albion) ----------
+    var REGIONS = { am: 'https://gameinfo.albiononline.com/api/gameinfo' };
+    var HOME = { id: 'bTc3pJjYRF2gV00h-FOE_Q', name: 'D_I_R_E_T_O_R_I_A', region: 'am' };
+    var GKEY = 'albion-guild-v2', RECENT_MS = 3 * 86400000, STALE_MS = 30 * 60000;
+    var G_FAIL = 'Não consegui carregar os membros (a API do Albion ou os serviços de repasse não responderam). Confira a internet e toque em Atualizar.';
+    var gld = loadGuild(), gLoading = false;
+
+    function loadGuild() {
+      try { localStorage.removeItem('albion-guild-v1'); } catch (e) {}
+      var g = { guild: HOME, members: [], at: 0, sel: {}, visible: [], fresh: [] };
+      try {
+        var c = JSON.parse(localStorage.getItem(GKEY));
+        if (c && c.guild && c.guild.id === HOME.id && Array.isArray(c.members)) { g.members = c.members; g.at = c.at || 0; }
+      } catch (e) {}
+      return g;
+    }
+    function saveGuild() { try { localStorage.setItem(GKEY, JSON.stringify({ guild: gld.guild, members: gld.members, at: gld.at })); } catch (e) {} }
+    function membersUrl() { return REGIONS[gld.guild.region] + '/guilds/' + encodeURIComponent(gld.guild.id) + '/members'; }
+    function gmsg(t) { $('gMsg').textContent = t || ''; }
+
+    // Tenta direto e por serviços de repasse ao mesmo tempo. Vale o primeiro que responder.
+    // Se você publicar seu próprio repasse (ex.: Cloudflare Worker), cole a URL aqui, sem barra no final.
+    // Exemplo: 'https://albion-proxy.seunome.workers.dev'
+    var MY_PROXY = '';
+    var PROXIES = [
+      function (u) { return MY_PROXY ? MY_PROXY + '/?url=' + encodeURIComponent(u) : Promise.reject(new Error('sem proxy próprio')); },
+      function (u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
+      function (u) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
+      function (u) { return 'https://corsproxy.io/?url=' + encodeURIComponent(u); },
+      function (u) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); },
+      function (u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
+    ];
+    async function getJSON(url) {
+      async function once(u) {
+        var ctrl = new AbortController(), timer = setTimeout(function () { ctrl.abort(); }, 15000);
+        try {
+          var r = await fetch(u, { signal: ctrl.signal });
+          if (!r.ok) throw new Error('http ' + r.status);
+          var d = JSON.parse(await r.text());
+          if (d && typeof d.contents === 'string') d = JSON.parse(d.contents);
+          if (!d || typeof d !== 'object') throw new Error('json');
+          return d;
+        } finally { clearTimeout(timer); }
+      }
+      var tries = [once(url)].concat(PROXIES.map(function (p) {
+        var u = p(url);
+        return typeof u === 'string' ? once(u) : u;
+      }));
+      try { return await Promise.any(tries); }
+      catch (e) { console.warn('[Guilda] todas as tentativas falharam:', e.errors || e); throw e; }
+    }
+
+    function parseMembers(arr) {
+      return (Array.isArray(arr) ? arr : []).map(function (x) {
+        var ls = x.LifetimeStatistics || x.lifetimeStatistics || {};
+        var t = Date.parse(ls.Timestamp || ls.timestamp || '');
+        return { n: String(x.Name || x.name || ''), t: isNaN(t) ? 0 : t };
+      }).filter(function (x) { return x.n; });
+    }
+
+    function actInfo(t) {
+      if (!t) return { text: '', hot: false };
+      var diff = Date.now() - t, d = diff / 86400000;
+      return { text: d < 1 ? 'atividade: últimas 24h' : 'atividade: há ' + Math.floor(d) + ' dias', hot: diff <= RECENT_MS };
+    }
+
+    function selectedNames() { return Object.keys(gld.sel).filter(function (k) { return gld.sel[k]; }); }
+    function updateGAdd() {
+      var n = selectedNames().length;
+      $('gAdd').textContent = 'Adicionar ' + n + ' ao ' + splitName(root.active);
+      $('gAdd').disabled = !n;
+    }
+
+    function renderGuild() {
+      $('gName').textContent = gld.guild.name;
+      var has = gld.members.length > 0;
+      $('gBox').hidden = !has;
+      $('gEmpty').hidden = has;
+      $('gEmpty').textContent = gLoading ? 'Carregando membros...' : 'Nenhum membro carregado. Toque em Atualizar.';
+      $('gMeta').textContent = has
+        ? gld.members.length + ' membros. Atualizado em ' + new Date(gld.at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + '.'
+        : '';
+      if (!has) return;
+
+      var q = $('gFilter').value.trim().toLowerCase(), onlyRecent = $('gRecent').checked, byName = $('gSort').value === 'az';
+      var have = {}, now = Date.now();
+      state.members.forEach(function (m) { have[m.name.toLowerCase()] = true; });
+      var cmp = function (a, b) { return a.n.localeCompare(b.n, 'pt-BR', { sensitivity: 'base' }); };
+      var rows = gld.members.filter(function (m) {
+        return (!q || m.n.toLowerCase().indexOf(q) !== -1) && (!onlyRecent || (m.t && now - m.t <= RECENT_MS));
+      }).sort(byName ? cmp : function (a, b) { return (b.t - a.t) || cmp(a, b); });
+
+      var list = $('gList'); list.innerHTML = '';
+      gld.visible = []; gld.fresh = [];
+      rows.forEach(function (m) {
+        var already = !!have[m.n.toLowerCase()];
+        var cb = h('input', { type: 'checkbox' });
+        cb.disabled = already;
+        cb.checked = already || !!gld.sel[m.n];
+        cb.addEventListener('change', function () { gld.sel[m.n] = cb.checked; updateGAdd(); });
+        var a = actInfo(m.t);
+        list.appendChild(h('label', { class: 'pick' + (already ? ' off' : '') }, [
+          cb, h('span', { text: m.n }),
+          already ? h('small', { text: 'já na lista' }) : (a.text ? h('small', { class: 'act' + (a.hot ? ' hot' : ''), text: a.text }) : null)
+        ]));
+        if (!already) { gld.visible.push(m.n); if (a.hot) gld.fresh.push(m.n); }
+      });
+      if (!rows.length) list.appendChild(h('div', { class: 'empty', text: 'Nenhum jogador encontrado.' }));
+      updateGAdd();
+    }
+
+    async function loadGuildMembers() {
+      if (gLoading) return;
+      gLoading = true; gmsg(''); $('gRefresh').disabled = true; renderGuild();
+      try {
+        var raw;
+        try { raw = await getJSON(membersUrl()); } catch (e1) { raw = await getJSON(membersUrl()); }
+        var list = parseMembers(raw);
+        if (!list.length) throw new Error('vazio');
+        if (raw[0] && raw[0].GuildName) gld.guild.name = raw[0].GuildName;
+        gld.members = list; gld.at = Date.now(); gld.sel = {}; saveGuild();
+      } catch (e) {
+        gmsg(G_FAIL);
+        $('gManual').hidden = false; $('gManual').open = true;
+        $('gManualLink').href = membersUrl();
+      }
+      gLoading = false; $('gRefresh').disabled = false; renderGuild();
+    }
+
+    function ensureGuild() {
+      if (!gld.members.length || Date.now() - gld.at > STALE_MS) loadGuildMembers(); else renderGuild();
+    }
+
+    $('gPasteBtn').addEventListener('click', function () {
+      try {
+        var raw = JSON.parse($('gPaste').value.trim());
+        var list = parseMembers(raw);
+        if (!list.length) throw new Error('vazio');
+        if (raw[0] && raw[0].GuildName) gld.guild.name = raw[0].GuildName;
+        gld.members = list; gld.at = Date.now(); gld.sel = {}; saveGuild();
+        $('gPaste').value = ''; $('gManual').open = false; $('gManual').hidden = true;
+        gmsg(''); renderGuild();
+      } catch (e) { gmsg('Não consegui ler esse texto. Copie a página inteira da API, do primeiro [ ao último ].'); }
+    });
+    $('gRefresh').addEventListener('click', loadGuildMembers);
+    $('gFilter').addEventListener('input', renderGuild);
+    $('gSort').addEventListener('change', renderGuild);
+    $('gRecent').addEventListener('change', renderGuild);
+    $('gAll').addEventListener('click', function () { gld.visible.forEach(function (n) { gld.sel[n] = true; }); renderGuild(); });
+    $('gFresh').addEventListener('click', function () { gld.fresh.forEach(function (n) { gld.sel[n] = true; }); renderGuild(); });
+    $('gNone').addEventListener('click', function () { gld.sel = {}; renderGuild(); });
+    $('gAdd').addEventListener('click', function () {
+      var r = addNames(selectedNames());
+      gld.sel = {}; renderGuild();
+      toast(r.added + (r.added === 1 ? ' jogador adicionado' : ' jogadores adicionados') + ' ao ' + splitName(root.active));
+    });
+
+    // Gaveta direita da guilda
+    var gdFocus = null;
+    function openGD() {
+      gdFocus = document.activeElement;
+      $('gBack').hidden = false;
+      $('gDrawer').classList.add('open'); $('gDrawer').setAttribute('aria-hidden', 'false');
+      ensureGuild();
+      setTimeout(function () { var f = $('gFilter'); if (f && !$('gBox').hidden) f.focus(); }, 0);
+    }
+    function closeGD() {
+      $('gBack').hidden = true;
+      $('gDrawer').classList.remove('open'); $('gDrawer').setAttribute('aria-hidden', 'true');
+      if (gdFocus && gdFocus.focus) gdFocus.focus();
+    }
+    $('openGuild').addEventListener('click', openGD);
+    $('gdClose').addEventListener('click', closeGD);
+    $('gBack').addEventListener('mousedown', closeGD);
+    $('gDrawer').addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { ev.preventDefault(); closeGD(); } });
+
+    // ---------- Splits (menu lateral) ----------
+    function splitName(i) { return 'Split ' + (i + 1) + '#'; }
+    function distOf(sp) { return sp.entries.reduce(function (a, e) { return a + e.distributed; }, 0); }
+
+    function renderSide() {
+      var nav = $('splitNav'); nav.innerHTML = '';
+      var all = 0;
+      root.splits.forEach(function (sp, i) {
+        var tot = distOf(sp), n = sp.members.length; all += tot;
+        nav.appendChild(h('button', { class: 'sp' + (i === root.active ? ' active' : ''), 'aria-current': i === root.active ? 'true' : 'false',
+          onclick: function () { switchSplit(i); } }, [
+          h('span', { class: 'sp-name', text: splitName(i) }),
+          h('span', { class: 'sp-amt', text: fmt(tot) }),
+          h('span', { class: 'sp-meta', text: n + (n === 1 ? ' jogador' : ' jogadores') })
+        ]));
+      });
+      setNum($('sAll'), 'sAll', all);
+      $('curSplit').textContent = splitName(root.active);
+      $('addSplit').hidden = root.splits.length >= MAX;
+      $('addSplit').textContent = '+ Criar ' + splitName(root.splits.length);
+      var canDel = root.splits.length > MIN;
+      $('delSplit').hidden = !canDel;
+      if (canDel) $('delSplit').textContent = 'Remover ' + splitName(root.splits.length - 1);
+    }
+
+    function switchSplit(i) {
+      if (i === root.active || !root.splits[i]) return;
+      root.active = i; state = root.splits[i]; shown = {};
+      freshMember = freshEntry = freshDon = null; gld.sel = {};
+      $('result').hidden = true;
+      ['lootMsg', 'memberMsg', 'donMsg'].forEach(function (id) { $(id).textContent = ''; });
+      $('amount').value = ''; $('repair').value = ''; $('donAmount').value = '';
+      save(); render();
+      var c = $('content'); c.classList.remove('swap'); void c.offsetWidth; c.classList.add('swap');
+    }
+
+    $('addSplit').addEventListener('click', function () {
+      if (root.splits.length >= MAX) return;
+      root.splits.push(blank());
+      switchSplit(root.splits.length - 1);
+      toast(splitName(root.active) + ' criado');
+    });
+
+    $('delSplit').addEventListener('click', async function () {
+      if (root.splits.length <= MIN) return;
+      var i = root.splits.length - 1, sp = root.splits[i];
+      var has = sp.members.length || sp.entries.length;
+      if (!(await ask('Remover ' + splitName(i) + '?',
+        has ? 'Jogadores, valores e histórico deste split serão apagados. Não dá para desfazer.' : 'Este split está vazio e será removido.', 'Remover', true))) return;
+      root.splits.pop();
+      if (root.active > root.splits.length - 1) root.active = root.splits.length - 1;
+      state = root.splits[root.active]; shown = {};
+      save(); render(); toast(splitName(i) + ' removido');
+    });
+
+    render();
+    showTab('split');
+    loadGuildMembers();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveInd);
+
+    // Abre link compartilhado (#d=...)
+    if (/^#d=/.test(location.hash)) {
+      decodeText(location.hash).then(function (data) {
+        return applyImport(data);
+      }).catch(function () { shareMsg('O link compartilhado não pôde ser lido.'); })
+        .then(function () { history.replaceState(null, '', location.pathname + location.search); });
+    }
+  })();
+  </script>
+  </body>
+  </html>
