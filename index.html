@@ -28,8 +28,43 @@
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh;
     font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 22px 16px 24px; min-height: 100vh; display: flex; flex-direction: column; }
-  main { flex: 1; width: 100%; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 22px 16px 24px; min-height: 100vh; display: flex; flex-direction: column; }
+  .layout { flex: 1; width: 100%; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 22px; align-items: start; }
+  .content { min-width: 0; }
+  .content.swap { animation: viewIn .25s ease; }
+  .ctx { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .ctx h2 { margin: 0; font: 700 1.35rem/1.2 var(--serif); color: var(--silver); }
+  .ctx span { color: var(--muted); font-size: .85rem; }
+
+  /* Menu lateral dos splits */
+  .side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .side-h { padding: 0 4px; font: 650 .95rem var(--serif); color: var(--silver); }
+  .splitnav { display: flex; flex-direction: column; gap: 6px; }
+  .sp { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; gap: 0 8px; align-items: center; text-align: left;
+    padding: 10px 12px 10px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; color: var(--text); font-weight: 400; }
+  .sp::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brass);
+    transform: scaleY(0); transition: transform .25s; }
+  .sp:hover { border-color: #4b5b78; }
+  .sp.active { background: var(--panel-2); border-color: #4b5b78; }
+  .sp.active::before { transform: scaleY(1); }
+  .sp-name { font-weight: 650; }
+  .sp-amt { color: var(--brass); font: 700 .85rem var(--serif); font-variant-numeric: tabular-nums; }
+  .sp-meta { grid-column: 1 / -1; color: var(--muted); font-size: .78rem; }
+  .side-act { display: flex; flex-direction: column; gap: 6px; }
+  .side-total { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 8px 4px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+  .side-total b { font: 700 .95rem var(--serif); color: var(--silver); font-variant-numeric: tabular-nums; }
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .side { position: static; }
+    .splitnav { flex-direction: row; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .splitnav::-webkit-scrollbar { display: none; }
+    .sp { flex: 0 0 auto; min-width: 128px; }
+    .sp::before { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 3px; transform: scaleX(0); }
+    .sp.active::before { transform: scaleX(1); }
+    .side-act { flex-direction: row; }
+    .side-total { display: none; }
+  }
+
 
   /* Cabeçalho */
   .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
@@ -237,6 +272,20 @@
     <span class="saved">Salvo neste navegador</span>
   </header>
 
+  <div class="layout">
+    <aside class="side" aria-label="Splits">
+      <div class="side-h">Splits</div>
+      <nav class="splitnav" id="splitNav"></nav>
+      <div class="side-act">
+        <button id="addSplit" class="small">+ Criar split</button>
+        <button id="delSplit" class="small danger" hidden>Remover</button>
+      </div>
+      <div class="side-total"><small>Total geral</small><b id="sAll">0</b></div>
+    </aside>
+
+    <div class="content" id="content">
+  <div class="ctx"><h2 id="curSplit">Split 1#</h2><span>Cada split tem seus próprios jogadores e valores.</span></div>
+
   <section class="stats" aria-label="Resumo">
     <div class="stat hero"><small>Prata distribuída</small><b id="sTotal">0</b></div>
     <div class="stat"><small>Ativos</small><b id="sActive">0</b></div>
@@ -336,6 +385,7 @@
         <div class="bar">
           <button id="undo" class="small">Desfazer último</button>
           <button id="copy" class="small">Copiar resumo</button>
+          <button id="copyAll" class="small">Copiar todos os splits</button>
         </div>
         <div class="hist" id="history"></div>
         <p class="empty" id="historyEmpty">Nenhum loot dividido ainda.</p>
@@ -350,7 +400,7 @@
     <section class="view" id="view-share" role="tabpanel" hidden>
       <div class="card">
         <h2>Passar para outra pessoa</h2>
-        <p class="lead">Gere um link, código ou arquivo com todo o registro. Quem receber importa e continua de onde parou.</p>
+        <p class="lead">Gere um link, código ou arquivo com todos os splits. Quem receber importa e continua de onde parou.</p>
         <div class="opts">
           <div class="opt"><b>Link</b><span>A pessoa abre e o registro carrega sozinho.</span><button id="shareLink" class="primary small">Copiar link</button></div>
           <div class="opt"><b>Código</b><span>Texto curto para colar em Importar.</span><button id="shareCode" class="small">Copiar código</button></div>
@@ -359,7 +409,7 @@
       </div>
       <div class="card">
         <button type="button" class="head" id="importHead" aria-expanded="false" aria-controls="importBody">
-          <span><b>Importar registro</b><small>Cole um link ou código, ou envie um arquivo. Substitui o registro atual.</small></span>
+          <span><b>Importar registro</b><small>Cole um link ou código, ou envie um arquivo. Substitui todos os splits atuais.</small></span>
           <span class="chev" aria-hidden="true">›</span>
         </button>
         <div class="collapse" id="importBody"><div class="inner"><div class="stack padtop">
@@ -376,7 +426,7 @@
       </div>
       <div class="card">
         <h2>Zerar</h2>
-        <p class="lead">Escolha o que apagar. Você vai confirmar antes.</p>
+        <p class="lead">Vale só para o split que está aberto. Você vai confirmar antes.</p>
         <div class="opts two">
           <div class="opt"><b>Zerar valores</b><span>Mantém os jogadores na lista. Apaga saldos, histórico e contadores.</span><button id="resetValues" class="small danger">Zerar valores</button></div>
           <div class="opt"><b>Zerar tudo</b><span>Apaga jogadores, valores e histórico.</span><button id="reset" class="small danger">Zerar tudo</button></div>
@@ -384,6 +434,8 @@
       </div>
     </section>
   </main>
+    </div>
+  </div>
 
   <footer class="foot">
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5L3 8z"/><rect x="5" y="20" width="14" height="1.6" rx=".8"/></svg>
@@ -408,19 +460,30 @@
 
 <script>
 (function () {
-  var KEY = 'albion-loot-split-v2';
-  var state = load();
+  var KEY = 'albion-loot-split-v3', OLD_KEY = 'albion-loot-split-v2', MAX = 5, MIN = 3;
+  var root = load();
+  var state = root.splits[root.active];
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var freshMember = null, freshEntry = null, freshDon = null, shown = {}, repairOpen = false;
 
+  function blank() { return { members: [], entries: [], donations: [], carry: 0, guildTotal: 0, nextId: 1 }; }
+  function fixSplit(x) { if (!x.guildTotal) x.guildTotal = 0; if (!Array.isArray(x.donations)) x.donations = []; return x; }
   function load() {
     try {
-      var s = JSON.parse(localStorage.getItem(KEY));
-      if (s && Array.isArray(s.members) && Array.isArray(s.entries)) { if (!s.guildTotal) s.guildTotal = 0; if (!Array.isArray(s.donations)) s.donations = []; return s; }
+      var r = JSON.parse(localStorage.getItem(KEY));
+      if (r && Array.isArray(r.splits) && r.splits.length) {
+        r.splits = r.splits.map(fixSplit);
+        r.active = Math.min(Math.max(Math.floor(Number(r.active)) || 0, 0), r.splits.length - 1);
+        return r;
+      }
     } catch (e) {}
-    return { members: [], entries: [], donations: [], carry: 0, guildTotal: 0, nextId: 1 };
+    try {
+      var o = JSON.parse(localStorage.getItem(OLD_KEY));
+      if (o && Array.isArray(o.members) && Array.isArray(o.entries)) return { splits: [fixSplit(o), blank(), blank()], active: 0 };
+    } catch (e) {}
+    return { splits: [blank(), blank(), blank()], active: 0 };
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(root)); } catch (e) {} }
 
   var $ = function (id) { return document.getElementById(id); };
   var fmt = function (n) { return Math.round(n).toLocaleString('pt-BR'); };
@@ -608,6 +671,7 @@
   function hue(name) { var x = 0; for (var i = 0; i < name.length; i++) x = (x * 31 + name.charCodeAt(i)) % 360; return x; }
 
   function render() {
+    renderSide();
     var act = activeMembers().length;
     setNum($('sTotal'), 'sTotal', state.entries.reduce(function (a, e) { return a + e.distributed; }, 0));
     setNum($('sActive'), 'sActive', act);
@@ -681,6 +745,7 @@
     $('historyEmpty').hidden = state.entries.length > 0;
     $('undo').disabled = !state.entries.length;
     $('copy').disabled = !state.members.length;
+    $('copyAll').disabled = !root.splits.some(function (x) { return x.members.length; });
     refreshPayer();
     refreshDonate();
     updatePreview();
@@ -831,15 +896,23 @@
     } else { manual(); }
   }
 
+  function summaryOf(sp, i) {
+    var lines = [splitName(i)];
+    sp.members.forEach(function (m) { lines.push(m.name + ': ' + fmt(m.total)); });
+    if (!sp.members.length) lines.push('Sem jogadores');
+    if (sp.guildTotal) lines.push('Guilda (reparo): ' + fmt(sp.guildTotal));
+    lines.push('Total distribuído: ' + fmt(distOf(sp)));
+    return lines.join('\n');
+  }
   $('copy').addEventListener('click', function () {
-    var lines = state.members.map(function (m) { return m.name + ': ' + fmt(m.total); });
-    if (state.guildTotal) lines.push('Guilda (reparo): ' + fmt(state.guildTotal));
-    lines.push('Total distribuído: ' + fmt(state.entries.reduce(function (a, e) { return a + e.distributed; }, 0)));
-    copyText(lines.join('\n'), 'Resumo copiado');
+    copyText(summaryOf(state, root.active), 'Resumo do ' + splitName(root.active) + ' copiado');
+  });
+  $('copyAll').addEventListener('click', function () {
+    copyText(root.splits.map(summaryOf).join('\n\n'), 'Resumo de todos os splits copiado');
   });
 
   $('resetValues').addEventListener('click', async function () {
-    if (!(await ask('Zerar valores?', 'Os jogadores continuam na lista, mas saldos, histórico, sobra e contadores voltam a zero. Não dá para desfazer.', 'Zerar valores', true))) return;
+    if (!(await ask('Zerar valores do ' + splitName(root.active) + '?', 'Os jogadores continuam na lista, mas saldos, histórico, sobra e contadores deste split voltam a zero. Não dá para desfazer.', 'Zerar valores', true))) return;
     state.members.forEach(function (m) { m.total = 0; m.since = 0; });
     state.entries = []; state.donations = []; state.carry = 0; state.guildTotal = 0;
     $('result').hidden = true;
@@ -847,8 +920,8 @@
   });
 
   $('reset').addEventListener('click', async function () {
-    if (!(await ask('Zerar tudo?', 'Jogadores, valores e histórico serão apagados. Não dá para desfazer.', 'Zerar tudo', true))) return;
-    state = { members: [], entries: [], donations: [], carry: 0, guildTotal: 0, nextId: 1 };
+    if (!(await ask('Zerar tudo do ' + splitName(root.active) + '?', 'Jogadores, valores e histórico deste split serão apagados. Os outros splits não mudam. Não dá para desfazer.', 'Zerar tudo', true))) return;
+    state = blank(); root.splits[root.active] = state;
     shown = {}; $('result').hidden = true;
     save(); render(); toast('Tudo zerado');
   });
@@ -877,7 +950,7 @@
     return new Uint8Array(await new Response(out).arrayBuffer());
   }
   async function encodeState() {
-    var bytes = new TextEncoder().encode(JSON.stringify(state));
+    var bytes = new TextEncoder().encode(JSON.stringify(root));
     if (window.CompressionStream) return 'z.' + bytesToB64(await pipeBytes(bytes, new CompressionStream('gzip')));
     return 'p.' + bytesToB64(bytes);
   }
@@ -895,7 +968,7 @@
     }
     throw new Error('formato');
   }
-  function sanitize(o) {
+  function sanitizeSplit(o) {
     if (!o || !Array.isArray(o.members) || !Array.isArray(o.entries)) throw new Error('formato');
     var num = function (x) { x = Number(x); return isFinite(x) ? x : 0; };
     var members = o.members.map(function (m, i) {
@@ -920,13 +993,27 @@
     });
     return { members: members, entries: entries, donations: donations, carry: num(o.carry), guildTotal: num(o.guildTotal), nextId: Math.max(num(o.nextId), maxId + 1) };
   }
-  async function applyImport(data) {
-    var next = sanitize(data);
-    if (state.members.length || state.entries.length) {
-      if (!(await ask('Importar registro?', 'Isso substitui o registro atual (' + state.members.length + ' jogadores, ' + state.entries.length +
-        ' loots) por ' + next.members.length + ' jogadores e ' + next.entries.length + ' loots.', 'Importar', true))) return false;
+  function sanitizeRoot(o) {
+    if (o && Array.isArray(o.splits)) {
+      var sp = o.splits.slice(0, MAX).map(sanitizeSplit);
+      while (sp.length < MIN) sp.push(blank());
+      return { splits: sp, active: Math.min(Math.max(Math.floor(Number(o.active)) || 0, 0), sp.length - 1) };
     }
-    state = next; shown = {}; $('result').hidden = true;
+    return { splits: [sanitizeSplit(o), blank(), blank()], active: 0 };
+  }
+  function countAll(r) {
+    var m = 0, e = 0;
+    r.splits.forEach(function (x) { m += x.members.length; e += x.entries.length; });
+    return { m: m, e: e };
+  }
+  async function applyImport(data) {
+    var next = sanitizeRoot(data);
+    var cur = countAll(root), inc = countAll(next);
+    if (cur.m || cur.e) {
+      if (!(await ask('Importar registro?', 'Isso substitui todos os splits atuais (' + cur.m + ' jogadores, ' + cur.e +
+        ' loots) por ' + next.splits.length + ' splits com ' + inc.m + ' jogadores e ' + inc.e + ' loots.', 'Importar', true))) return false;
+    }
+    root = next; state = root.splits[root.active]; shown = {}; $('result').hidden = true;
     save(); render();
     return true;
   }
@@ -945,7 +1032,7 @@
   $('shareFile').addEventListener('click', function () {
     var d = new Date(), pad = function (n) { return ('0' + n).slice(-2); };
     var name = 'loot-split-' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '.json';
-    var url = URL.createObjectURL(new Blob([JSON.stringify(state, null, 1)], { type: 'application/json' }));
+    var url = URL.createObjectURL(new Blob([JSON.stringify(root, null, 1)], { type: 'application/json' }));
     var a = document.createElement('a'); a.href = url; a.download = name;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
@@ -987,6 +1074,61 @@
   }
   bindHead('importHead', 'importBody');
   bindHead('donateHead', 'donateBody');
+
+  // ---------- Splits (menu lateral) ----------
+  function splitName(i) { return 'Split ' + (i + 1) + '#'; }
+  function distOf(sp) { return sp.entries.reduce(function (a, e) { return a + e.distributed; }, 0); }
+
+  function renderSide() {
+    var nav = $('splitNav'); nav.innerHTML = '';
+    var all = 0;
+    root.splits.forEach(function (sp, i) {
+      var tot = distOf(sp), n = sp.members.length; all += tot;
+      nav.appendChild(h('button', { class: 'sp' + (i === root.active ? ' active' : ''), 'aria-current': i === root.active ? 'true' : 'false',
+        onclick: function () { switchSplit(i); } }, [
+        h('span', { class: 'sp-name', text: splitName(i) }),
+        h('span', { class: 'sp-amt', text: fmt(tot) }),
+        h('span', { class: 'sp-meta', text: n + (n === 1 ? ' jogador' : ' jogadores') })
+      ]));
+    });
+    setNum($('sAll'), 'sAll', all);
+    $('curSplit').textContent = splitName(root.active);
+    $('addSplit').hidden = root.splits.length >= MAX;
+    $('addSplit').textContent = '+ Criar ' + splitName(root.splits.length);
+    var canDel = root.splits.length > MIN;
+    $('delSplit').hidden = !canDel;
+    if (canDel) $('delSplit').textContent = 'Remover ' + splitName(root.splits.length - 1);
+  }
+
+  function switchSplit(i) {
+    if (i === root.active || !root.splits[i]) return;
+    root.active = i; state = root.splits[i]; shown = {};
+    freshMember = freshEntry = freshDon = null;
+    $('result').hidden = true;
+    ['lootMsg', 'memberMsg', 'donMsg'].forEach(function (id) { $(id).textContent = ''; });
+    $('amount').value = ''; $('repair').value = ''; $('donAmount').value = '';
+    save(); render();
+    var c = $('content'); c.classList.remove('swap'); void c.offsetWidth; c.classList.add('swap');
+  }
+
+  $('addSplit').addEventListener('click', function () {
+    if (root.splits.length >= MAX) return;
+    root.splits.push(blank());
+    switchSplit(root.splits.length - 1);
+    toast(splitName(root.active) + ' criado');
+  });
+
+  $('delSplit').addEventListener('click', async function () {
+    if (root.splits.length <= MIN) return;
+    var i = root.splits.length - 1, sp = root.splits[i];
+    var has = sp.members.length || sp.entries.length;
+    if (!(await ask('Remover ' + splitName(i) + '?',
+      has ? 'Jogadores, valores e histórico deste split serão apagados. Não dá para desfazer.' : 'Este split está vazio e será removido.', 'Remover', true))) return;
+    root.splits.pop();
+    if (root.active > root.splits.length - 1) root.active = root.splits.length - 1;
+    state = root.splits[root.active]; shown = {};
+    save(); render(); toast(splitName(i) + ' removido');
+  });
 
   render();
   showTab('split');
