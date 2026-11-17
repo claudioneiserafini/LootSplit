@@ -38,7 +38,7 @@
 
     /* Menu lateral dos splits */
     .side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 10px; }
-    .side-h { padding: 0 4px; font: 650 .95rem var(--serif); color: var(--silver); }
+    .side-h { padding: 0 4px; font: 650 .95rem var(--serif); color: var(--silver); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .splitnav { display: flex; flex-direction: column; gap: 6px; }
     .sp { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; gap: 0 8px; align-items: center; text-align: left;
       padding: 10px 12px 10px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; color: var(--text); font-weight: 400; }
@@ -82,7 +82,7 @@
     .dlg.wide { max-height: 92vh; overflow-y: auto; }
 
     /* Cabeçalho */
-    .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
     .brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
     h1 { margin: 0; font: 700 1.55rem/1.2 var(--serif); color: var(--silver); }
     .game { color: var(--brass); font-size: .95rem; font-weight: 600; }
@@ -90,9 +90,10 @@
     .saved::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
 
     /* Contadores */
-    .stats { display: grid; grid-template-columns: 1.7fr repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stats { display: grid; grid-template-columns: 1.7fr repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
     .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 11px 14px; min-width: 0; }
-    .stat small { display: block; color: var(--muted); font-size: .76rem; line-height: 1.3; }
+    .stat small { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .76rem; line-height: 1.3; }
+    .stat small svg { width: 14px; height: 14px; flex: none; color: var(--brass); }
     .stat b { font: 700 1.2rem/1.35 var(--serif); color: var(--silver); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
     .stat.hero b { font-size: 1.85rem; color: var(--brass); }
     @media (max-width: 700px) { .stats { grid-template-columns: 1fr 1fr; } .stat.hero { grid-column: 1 / -1; } }
@@ -300,6 +301,19 @@
     .don { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--bg); border: 1px solid var(--line);
       border-radius: 10px; padding: 10px 12px; }
 
+    /* Botões do histórico */
+    .hbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .hbar button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-align: center; line-height: 1.25; }
+    .hbar svg { width: 16px; height: 16px; flex: none; }
+    @media (max-width: 420px) { .hbar { grid-template-columns: 1fr; } }
+
+    /* Ícones de ação (cabeçalho e menu lateral) */
+    .top-r { display: flex; align-items: center; gap: 12px; }
+    .ibtn { flex: none; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 9px; background: none; color: var(--muted); }
+    .ibtn svg { width: 18px; height: 18px; }
+    .ibtn:hover { color: var(--brass); border-color: var(--brass); }
+    .opts.one { grid-template-columns: 1fr; }
+
     /* Rodapé */
     .foot { margin-top: 40px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
       color: #6b7a92; font-size: .78rem; }
@@ -319,12 +333,21 @@
   <div class="wrap">
     <header class="top">
       <div class="brand"><h1>Loot Split</h1><span class="game">Albion Online</span></div>
-      <span class="saved">Salvo neste navegador</span>
+      <div class="top-r">
+        <button type="button" class="ibtn" id="openShare" title="Compartilhar" aria-label="Compartilhar registro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7l7.4-4.2M8.3 13.3l7.4 4.2"/></svg>
+        </button>
+        <span class="saved">Salvo neste navegador</span>
+      </div>
     </header>
 
     <div class="layout">
       <aside class="side" aria-label="Splits">
-        <div class="side-h">Splits</div>
+        <div class="side-h"><span>Splits</span>
+          <button type="button" class="ibtn" id="openReset" title="Zerar" aria-label="Opções para zerar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+          </button>
+        </div>
         <nav class="splitnav" id="splitNav"></nav>
         <div class="side-act">
           <button id="addSplit" class="small">+ Criar split</button>
@@ -337,11 +360,10 @@
     <div class="ctx"><h2 id="curSplit">Split 1#</h2><span>Cada split tem seus próprios jogadores e valores.</span></div>
 
     <section class="stats" aria-label="Resumo">
-      <div class="stat hero"><small>Prata distribuída</small><b id="sTotal">0</b></div>
-      <div class="stat"><small>Ativos</small><b id="sActive">0</b></div>
-      <div class="stat"><small>Pausados</small><b id="sPaused">0</b></div>
-      <div class="stat"><small>Sobra</small><b id="sCarry">0</b></div>
-      <div class="stat"><small>Reparo da guilda</small><b id="sGuild">0</b></div>
+      <div class="stat hero"><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v11"/><path d="M14.8 9.3c-.4-.9-1.4-1.4-2.8-1.4-1.6 0-2.7.8-2.7 1.9 0 2.6 5.6 1.2 5.6 4 0 1.1-1.1 1.9-2.9 1.9-1.4 0-2.5-.6-2.9-1.5"/></svg>Prata distribuída</small><b id="sTotal">0</b></div>
+      <div class="stat"><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16.5 11.5l2 2 3.5-4"/></svg>Ativos</small><b id="sActive">0</b></div>
+      <div class="stat"><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></svg>Pausados</small><b id="sPaused">0</b></div>
+      <div class="stat"><small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.2-2.9 7.6-7 9.5-4.1-1.9-7-5.3-7-9.5V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>Reparo da guilda</small><b id="sGuild">0</b></div>
     </section>
 
     <nav class="tabs" role="tablist" id="tabs" aria-label="Menu">
@@ -349,7 +371,6 @@
       <button class="tab" role="tab" data-tab="split" aria-selected="true">Dividir</button>
       <button class="tab" role="tab" data-tab="players" aria-selected="false">Jogadores <span class="badge" id="bPlayers">0</span></button>
       <button class="tab" role="tab" data-tab="history" aria-selected="false">Histórico <span class="badge" id="bHistory">0</span></button>
-      <button class="tab" role="tab" data-tab="share" aria-selected="false">Dados</button>
     </nav>
 
     <main>
@@ -360,7 +381,7 @@
           <p class="lead">Quem estiver ativo na hora recebe a parte.</p>
           <form class="stack" id="lootForm" autocomplete="off">
             <label class="f amount">Prata do conteúdo
-              <input type="text" id="amount" inputmode="decimal" placeholder="1.500.000 ou 1.5m ou 250k" required>
+              <input type="text" id="amount" inputmode="decimal" placeholder="1.500.000, 1.5m, 250k ou 15m383k" required>
             </label>
             <button type="button" class="toggle" id="repairToggle" aria-expanded="false" aria-controls="repairBox">
               <span class="plus" aria-hidden="true">+</span><span id="repairLabel">Adicionar reparo</span>
@@ -412,29 +433,14 @@
       <section class="view" id="view-history" role="tabpanel" hidden>
         <div class="card">
           <h2>Histórico</h2>
-          <p class="lead">Toque em um loot para ver os detalhes.</p>
-          <div class="bar">
-            <button id="undo" class="small">Desfazer último</button>
-            <button id="copy" class="small">Copiar resumo</button>
-            <button id="copyAll" class="small">Copiar todos os splits</button>
-          </div>
-          <div class="bar" style="margin-top:8px">
-            <button id="dCopy" class="small">Copiar p/ Discord</button>
-            <button id="dSend" class="small primary">Enviar ao Discord</button>
-            <button id="dSendAll" class="small">Enviar todos os splits</button>
+          <p class="lead">Toque em um loot para ver os detalhes, editar ou desfazer.</p>
+          <div class="hbar">
+            <button id="copy" class="small"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2.2"/><path d="M4 16c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h9c1.1 0 2 .9 2 2"/></svg>Copiar resumo</button>
+            <button id="copyAll" class="small"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2.2"/><path d="M4 16c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h9c1.1 0 2 .9 2 2"/></svg>Copiar todos os splits</button>
+            <button id="dSend" class="small primary"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg><span id="dSendLabel">Enviar ao Discord</span></button>
+            <button id="dSendAll" class="small primary"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>Enviar todos os splits</button>
           </div>
           <p class="msg" id="dMsg" role="status"></p>
-          <details id="dCfg">
-            <summary>Trocar canal do Discord (webhook)</summary>
-            <p class="note">O app já vem com um canal configurado. Para usar outro: Editar canal › Integrações › Webhooks › Novo webhook › Copiar URL, e cole abaixo.</p>
-            <p class="note">Quem tiver essa URL consegue postar no canal. Ela fica só neste navegador e não vai junto no link ou código de compartilhar.</p>
-            <input type="password" id="dUrl" placeholder="https://discord.com/api/webhooks/..." autocomplete="off" style="width:100%" aria-label="URL do webhook do Discord">
-            <div class="bar" style="margin-top:8px">
-              <button id="dSave" class="small primary">Salvar</button>
-              <button id="dTest" class="small">Enviar teste</button>
-              <button id="dRemove" class="small">Voltar ao padrão</button>
-            </div>
-          </details>
           <div class="hist" id="history"></div>
           <p class="empty" id="historyEmpty">Nenhum loot dividido ainda.</p>
           <div id="donSection" hidden>
@@ -444,28 +450,6 @@
         </div>
       </section>
 
-      <!-- Compartilhar -->
-      <section class="view" id="view-share" role="tabpanel" hidden>
-        <div class="card">
-          <h2>Passar para outra pessoa</h2>
-          <p class="lead">Gere um link ou código com todos os splits. Quem receber abre o link, ou cola o código, e continua de onde parou.</p>
-          <div class="opts two">
-            <div class="opt"><b>Link</b><span>A pessoa abre e o registro carrega sozinho.</span><button id="shareLink" class="primary small">Copiar link</button></div>
-            <div class="opt"><b>Código</b><span>Texto curto. Copie para enviar ou cole um código recebido.</span>
-              <div class="bar"><button id="shareCode" class="primary small">Copiar</button><button id="pasteCode" class="small">Colar</button></div>
-            </div>
-          </div>
-          <p class="msg" id="shareMsg" role="status"></p>
-        </div>
-        <div class="card">
-          <h2>Zerar</h2>
-          <p class="lead">Vale só para o split que está aberto. Você vai confirmar antes.</p>
-          <div class="opts two">
-            <div class="opt"><b>Zerar valores</b><span>Mantém os jogadores na lista. Apaga saldos, histórico e contadores.</span><button id="resetValues" class="small danger">Zerar valores</button></div>
-            <div class="opt"><b>Zerar tudo</b><span>Apaga jogadores, valores e histórico.</span><button id="reset" class="small danger">Zerar tudo</button></div>
-          </div>
-        </div>
-      </section>
     </main>
       </div>
     </div>
@@ -487,6 +471,57 @@
         <button id="mCancel" class="small">Cancelar</button>
         <button id="mOk" class="small primary">Confirmar</button>
       </div>
+    </div>
+  </div>
+  <div class="modal" id="sm" hidden>
+    <div class="dlg wide" role="dialog" aria-modal="true" aria-labelledby="smTitle">
+      <h2 id="smTitle">Compartilhar registro</h2>
+      <p>Gere um link ou código com todos os splits. Quem receber abre o link, ou cola o código, e continua de onde parou.</p>
+      <div class="opts one">
+        <div class="opt"><b>Link</b><span>A pessoa abre e o registro carrega sozinho.</span><button id="shareLink" class="primary small">Copiar link</button></div>
+        <div class="opt"><b>Código</b><span>Texto curto. Copie para enviar ou cole um código recebido.</span>
+          <div class="bar"><button id="shareCode" class="primary small">Copiar código</button><button id="pasteCode" class="small">Colar código</button></div>
+        </div>
+      </div>
+      <p class="msg" id="shareMsg" role="status" style="margin:10px 0 0"></p>
+      <div class="bar end" style="margin-top:12px"><button type="button" class="small" id="smClose">Fechar</button></div>
+    </div>
+  </div>
+  <div class="modal" id="zm" hidden>
+    <div class="dlg wide" role="dialog" aria-modal="true" aria-labelledby="zmTitle">
+      <h2 id="zmTitle">Zerar</h2>
+      <p>Escolha o que zerar. Você confirma antes de apagar e não dá para desfazer.</p>
+      <div class="opts one">
+        <div class="opt"><b>Zerar valores</b><span id="zvDesc"></span><button id="resetValues" class="small danger">Zerar valores</button></div>
+        <div class="opt"><b>Zerar tudo</b><span id="ztDesc"></span><button id="reset" class="small danger">Zerar tudo</button></div>
+        <div class="opt"><b>Zerar todos os splits</b><span>Apaga jogadores, valores e histórico de todos os splits.</span><button id="resetAll" class="small danger">Zerar todos os splits</button></div>
+      </div>
+      <div class="bar end" style="margin-top:14px"><button type="button" class="small" id="zmClose">Fechar</button></div>
+    </div>
+  </div>
+  <div class="modal" id="em" hidden>
+    <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="emTitle">
+      <h2 id="emTitle">Editar loot</h2>
+      <form class="stack" id="editForm" autocomplete="off">
+        <label class="f">Prata do conteúdo
+          <input type="text" id="eAmount" inputmode="decimal" placeholder="1.500.000, 1.5m, 250k ou 15m383k" required>
+        </label>
+        <div class="two">
+          <label class="f">Reparo (prata)
+            <input type="text" id="eRepair" inputmode="decimal" placeholder="0">
+          </label>
+          <label class="f">Quem pagou
+            <select id="ePayerType"><option value="guild">Guilda</option><option value="player">Um jogador</option></select>
+          </label>
+        </div>
+        <label class="f" id="ePayerWrap" hidden>Jogador que pagou <select id="ePayer"></select></label>
+        <p class="pv-hint" id="eHint" style="margin:0"></p>
+        <p class="msg" id="eMsg" role="status"></p>
+        <div class="bar end">
+          <button type="button" class="small" id="emClose">Cancelar</button>
+          <button class="primary small" type="submit">Salvar</button>
+        </div>
+      </form>
     </div>
   </div>
   <div class="modal" id="pm" hidden>
@@ -511,7 +546,7 @@
         </div>
         <label class="f">Valor
           <div class="inline">
-            <input type="text" id="donAmount" inputmode="decimal" placeholder="ex: 100k" required>
+            <input type="text" id="donAmount" inputmode="decimal" placeholder="ex: 100k ou 1m500k" required>
             <button type="button" class="small" id="donAll">Tudo</button>
           </div>
         </label>
@@ -519,7 +554,7 @@
         <p class="msg" id="donMsg" role="status"></p>
         <div class="bar end">
           <button type="button" class="small" id="dmClose">Cancelar</button>
-          <button class="primary small" type="submit">Doar</button>
+          <button class="primary small" type="submit" id="dmOk">Doar</button>
         </div>
       </form>
     </div>
@@ -574,7 +609,15 @@
     var freshMember = null, freshEntry = null, freshDon = null, shown = {}, repairOpen = false;
 
     function blank() { return { members: [], entries: [], donations: [], carry: 0, guildTotal: 0, nextId: 1 }; }
-    function fixSplit(x) { if (!x.guildTotal) x.guildTotal = 0; if (!Array.isArray(x.donations)) x.donations = []; return x; }
+    function fixSplit(x) {
+      if (!x.guildTotal) x.guildTotal = 0;
+      if (!Array.isArray(x.donations)) x.donations = [];
+      // remove loots repetidos (mesmo horário e número) e renumera; os saldos já estavam certos
+      var seen = {};
+      x.entries = (x.entries || []).filter(function (e) { var k = e.time + ':' + e.n; if (seen[k]) return false; seen[k] = 1; return true; });
+      x.entries.forEach(function (e, i) { e.n = i + 1; });
+      return x;
+    }
     function load() {
       try {
         var r = JSON.parse(localStorage.getItem(KEY));
@@ -621,10 +664,19 @@
       })(start);
     }
 
-    // Aceita 1500000, 1.500.000, 1,5m, 1.5m, 250k, 2kk
+    // Aceita 1500000, 1.500.000, 1,5m, 1.5m, 250k, 2kk e combinações como 15m383k (= 15.383.000)
     function parseSilver(raw) {
       var s = String(raw).toLowerCase().replace(/\s/g, '');
       if (!s) return NaN;
+      var parts = s.match(/\d+(?:[.,]\d+)?(?:kk|m|k)/g);
+      if (parts && parts.length > 1 && parts.join('') === s) {
+        var sum = 0;
+        for (var i = 0; i < parts.length; i++) {
+          var mm = parts[i].match(/^(\d+(?:[.,]\d+)?)(kk|m|k)$/);
+          sum += parseFloat(mm[1].replace(',', '.')) * (mm[2] === 'k' ? 1e3 : 1e6);
+        }
+        return Math.floor(sum + 1e-6);
+      }
       var mult = 1;
       if (/kk$/.test(s)) { mult = 1e6; s = s.slice(0, -2); }
       else if (/m$/.test(s)) { mult = 1e6; s = s.slice(0, -1); }
@@ -633,7 +685,7 @@
       else if (/^\d{1,3}(,\d{3})+$/.test(s)) s = s.replace(/,/g, '');
       else s = s.replace(',', '.');
       if (!/^\d*\.?\d+$/.test(s)) return NaN;
-      return Math.floor(parseFloat(s) * mult);
+      return Math.floor(parseFloat(s) * mult + 1e-6);
     }
 
     function activeMembers() { return state.members.filter(function (m) { return m.active; }); }
@@ -684,7 +736,7 @@
 
     // ---------- Menu ----------
     var tabs = [].slice.call(document.querySelectorAll('.tab'));
-    var views = { split: $('view-split'), players: $('view-players'), history: $('view-history'), share: $('view-share') };
+    var views = { split: $('view-split'), players: $('view-players'), history: $('view-history') };
     function moveInd() {
       var t = tabs.filter(function (x) { return x.getAttribute('aria-selected') === 'true'; })[0];
       if (!t) return;
@@ -735,16 +787,18 @@
     }
 
     function updatePreview() {
-      var box = $('preview'); box.innerHTML = '';
+      var box = $('preview'); box.innerHTML = ''; box.hidden = false;
       var hint = function (t) { box.appendChild(h('p', { class: 'pv-hint', text: t })); };
       var l = readLoot();
-      if (isNaN(l.gross) || l.gross <= 0) { hint('Digite a prata do conteúdo para ver como fica a divisão.'); return; }
+      if (isNaN(l.gross) || l.gross <= 0) { box.hidden = true; return; }
       var n = activeMembers().length;
       if (!n) { hint('Nenhum jogador ativo. Adicione jogadores na aba Jogadores.'); return; }
       if (isNaN(l.repair)) { hint('Valor do reparo inválido.'); return; }
       var byPlayer = l.repair > 0 && $('payerType').value === 'player';
       if (byPlayer && l.repair > l.gross) { hint('O reparo é maior que o loot.'); return; }
-      var share = Math.floor((l.gross - (byPlayer ? l.repair : 0) + state.carry) / n);
+      var act = activeMembers();
+      var calc = calcSplit(act.map(function (x) { return x.id; }), l.gross, l.repair, byPlayer, state.carry, state.entries.length);
+      var share = calc.share;
       box.appendChild(h('div', { class: 'pv-big' }, [
         h('b', { text: fmt(share) }),
         h('span', { text: 'para cada um dos ' + n + (n === 1 ? ' ativo' : ' ativos') })
@@ -761,7 +815,8 @@
             ' (só a parte dos outros; a dele, ' + fmt(own) + ', já fica descontada).');
         }
       }
-      if (state.carry > 0) lines.push('Inclui ' + fmt(state.carry) + ' de sobra do loot anterior.');
+      if (calc.extra > 0) { var xm = memberById(calc.extraId); lines.push('Não divide exato: sobram ' + fmt(calc.extra) + ' de prata, que vão a mais para ' + (xm ? xm.name : 'um jogador') + '.'); }
+      if (state.carry > 0) lines.push('Inclui ' + fmt(state.carry) + ' de sobra de divisões antigas.');
       if (lines.length) box.appendChild(h('ul', { class: 'pv-lines' }, lines.map(function (t) { return h('li', { text: t }); })));
     }
 
@@ -769,6 +824,7 @@
       var r = $('result'); r.innerHTML = '';
       r.appendChild(h('b', { text: 'Loot #' + e.n + ' dividido' }));
       r.appendChild(h('p', { text: 'Cada um dos ' + e.count + ' recebeu ' + fmt(e.share) + ' de prata.' }));
+      if (e.extra > 0 && e.extraName) r.appendChild(h('p', { text: 'A sobra de ' + fmt(e.extra) + ' foi para ' + e.extraName + '.' }));
       if (e.payerId) r.appendChild(h('p', { text: e.payerName + ' recebe ' + fmt(e.share + e.repair) + ' (inclui o reembolso do reparo).' }));
       else if (e.repair > 0) r.appendChild(h('p', { text: 'Reparo de ' + fmt(e.repair) + ' pago pela guilda.' }));
       r.hidden = false; r.classList.remove('pop'); void r.offsetWidth; r.classList.add('pop');
@@ -783,7 +839,6 @@
       setNum($('sTotal'), 'sTotal', state.entries.reduce(function (a, e) { return a + e.distributed; }, 0));
       setNum($('sActive'), 'sActive', act);
       setNum($('sPaused'), 'sPaused', state.members.length - act);
-      setNum($('sCarry'), 'sCarry', state.carry);
       setNum($('sGuild'), 'sGuild', state.guildTotal);
       $('bPlayers').textContent = state.members.length;
       $('bHistory').textContent = state.entries.length;
@@ -809,7 +864,7 @@
       $('membersEmpty').hidden = state.members.length > 0;
 
       var hist = $('history'); hist.innerHTML = '';
-      state.entries.slice().reverse().forEach(function (e) {
+      for (var ei = state.entries.length - 1; ei >= 0; ei--) (function (e, idx) {
         var d = new Date(e.time);
         var hh = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
         var lines = entryLines(e);
@@ -823,16 +878,16 @@
           ]),
           h('div', { class: 'body' }, lines.map(function (t) { return h('div', { text: t }); }).concat([
             h('div', { class: 'bar', style: 'margin-top:8px' }, [
-              h('button', { class: 'small', text: 'Copiar p/ Discord', onclick: function () { copyText(discordEntry(e).join('\n'), 'Loot #' + e.n + ' copiado'); } }),
-              h('button', { class: 'small', text: 'Enviar ao Discord', onclick: function () { sendDiscord(embedEntry(e), 'Loot #' + e.n + ' enviado ao Discord'); } })
+              h('button', { class: 'small', text: 'Editar', onclick: function () { openEdit(idx); } }),
+              h('button', { class: 'small danger', text: 'Desfazer', onclick: function () { undoEntry(idx); } })
             ])
           ]))
         ]));
-      });
+      })(state.entries[ei], ei);
       freshEntry = null;
 
       var dl = $('donList'); dl.innerHTML = '';
-      state.donations.slice().reverse().forEach(function (d, i) {
+      for (var di = state.donations.length - 1; di >= 0; di--) (function (d, idx) {
         var dt = new Date(d.time);
         var hh2 = ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2);
         dl.appendChild(h('div', { class: 'don' + (d.time === freshDon ? ' fresh' : '') }, [
@@ -841,17 +896,19 @@
             h('div', { class: 'meta', text: hh2 })
           ]),
           h('div', { class: 'bal', text: fmt(d.amount) }),
-          i === 0 ? h('button', { class: 'small', text: 'Desfazer', onclick: undoDonation }) : null
+          h('button', { class: 'small', text: 'Editar', onclick: function () { openDMEdit(idx); } }),
+          h('button', { class: 'small danger', text: 'Desfazer', onclick: function () { undoDonation(idx); } })
         ]));
-      });
+      })(state.donations[di], di);
       freshDon = null;
       $('donSection').hidden = !state.donations.length;
       $('historyEmpty').hidden = state.entries.length > 0;
-      $('undo').disabled = !state.entries.length;
       $('copy').disabled = !state.members.length;
       $('copyAll').disabled = !root.splits.some(function (x) { return x.members.length; });
-      $('dCopy').disabled = $('dSend').disabled = !state.members.length;
-      $('dSendAll').disabled = $('copyAll').disabled;
+      var anyVal = function (sp) { return sp.members.some(function (m) { return m.total > 0; }); };
+      $('dSendLabel').textContent = 'Enviar ' + splitName(root.active) + ' ao Discord';
+      $('dSend').disabled = !anyVal(state);
+      $('dSendAll').disabled = !root.splits.some(anyVal);
       refreshPayer();
       refreshDonate();
       renderGuild();
@@ -867,6 +924,7 @@
       return b;
     }
     function openDM(fromId) {
+      donEdit = -1;
       if (state.members.length < 2) { toast('Precisa de pelo menos 2 jogadores para doar.'); return; }
       refreshDonate();
       $('donFrom').value = fromId;
@@ -880,11 +938,24 @@
       $('dm').hidden = false;
       setTimeout(function () { $('donAmount').focus(); }, 0);
     }
+    function openDMEdit(idx) {
+      var d = state.donations[idx];
+      if (!d) return;
+      donEdit = idx; refreshDonate();
+      $('donFrom').value = d.fromId; $('donTo').value = d.toId;
+      $('dmTitle').textContent = 'Editar doação'; $('dmOk').textContent = 'Salvar';
+      updateDonHint();
+      $('donMsg').textContent = ''; $('donAmount').value = fmt(d.amount);
+      dmFocus = document.activeElement;
+      $('dm').hidden = false;
+      setTimeout(function () { $('donAmount').focus(); $('donAmount').select(); }, 0);
+    }
     function closeDM() {
+      donEdit = -1; $('dmTitle').textContent = 'Doar prata'; $('dmOk').textContent = 'Doar';
       $('dm').hidden = true;
       if (dmFocus && dmFocus.focus) dmFocus.focus();
     }
-    var dmFocus = null;
+    var dmFocus = null, donEdit = -1;
     $('dmClose').addEventListener('click', closeDM);
     $('dm').addEventListener('mousedown', function (ev) { if (ev.target === $('dm')) closeDM(); });
     $('dm').addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { ev.preventDefault(); closeDM(); } });
@@ -913,15 +984,18 @@
       $('donHint').textContent = m ? 'Saldo de ' + m.name + ': ' + fmt(m.total) : 'Adicione jogadores para poder doar.';
     }
 
-    async function undoDonation() {
-      var d = state.donations[state.donations.length - 1];
+    async function undoDonation(idx) {
+      var d = state.donations[idx];
       if (!d) return;
       if (!(await ask('Desfazer doação?', d.fromName + ' doou ' + fmt(d.amount) + ' para ' + d.toName + '. O valor volta para ' + d.fromName + '.', 'Desfazer', true))) return;
-      state.donations.pop();
-      state.members.forEach(function (m) {
-        if (m.id === d.fromId) m.total += d.amount;
-        if (m.id === d.toId) m.total -= d.amount;
+      var err = tryChange(function () {
+        state.donations.splice(idx, 1);
+        state.members.forEach(function (m) {
+          if (m.id === d.fromId) m.total += d.amount;
+          if (m.id === d.toId) m.total -= d.amount;
+        });
       });
+      if (err) { blocked(err); return; }
       save(); render();
     }
 
@@ -937,7 +1011,21 @@
       var amount = parseSilver($('donAmount').value);
       if (!from || !to) { msg.textContent = 'Escolha os dois jogadores.'; return; }
       if (from.id === to.id) { msg.textContent = 'Escolha jogadores diferentes.'; return; }
-      if (isNaN(amount) || amount <= 0) { msg.textContent = 'Valor inválido. Use por exemplo 100.000, 100k ou 1.5m.'; return; }
+      if (isNaN(amount) || amount <= 0) { msg.textContent = 'Valor inválido. Use por exemplo 100.000, 100k, 1.5m ou 1m500k.'; return; }
+      if (donEdit >= 0) {
+        var di = donEdit;
+        var derr = tryChange(function () {
+          var old = state.donations[di], of = memberById(old.fromId), ot = memberById(old.toId);
+          if (of) of.total += old.amount;
+          if (ot) ot.total -= old.amount;
+          if (amount > from.total) return from.name + ' só tem ' + fmt(from.total) + ' de saldo.';
+          from.total -= amount; to.total += amount;
+          state.donations[di] = { time: old.time, fromId: from.id, fromName: from.name, toId: to.id, toName: to.name, amount: amount };
+        });
+        if (derr) { msg.textContent = derr; return; }
+        save(); render(); closeDM(); toast('Doação atualizada');
+        return;
+      }
       if (amount > from.total) { msg.textContent = from.name + ' só tem ' + fmt(from.total) + ' de saldo.'; return; }
       from.total -= amount; to.total += amount;
       var d = { time: Date.now(), fromId: from.id, fromName: from.name, toId: to.id, toName: to.name, amount: amount };
@@ -979,7 +1067,7 @@
       ev.preventDefault();
       var msg = $('lootMsg'); msg.textContent = '';
       var l = readLoot();
-      if (isNaN(l.gross) || l.gross <= 0) { msg.textContent = 'Valor inválido. Use por exemplo 1.500.000, 1.5m ou 250k.'; return; }
+      if (isNaN(l.gross) || l.gross <= 0) { msg.textContent = 'Valor inválido. Use por exemplo 1.500.000, 1.5m, 250k ou 15m383k.'; return; }
       if (isNaN(l.repair)) { msg.textContent = 'Valor do reparo inválido.'; return; }
       var type = $('payerType').value;
       if (l.repair > 0 && type === 'player' && l.repair > l.gross) { msg.textContent = 'O reparo não pode ser maior que o loot.'; return; }
@@ -990,38 +1078,128 @@
         payer = state.members.filter(function (m) { return String(m.id) === $('payer').value; })[0];
         if (!payer) { msg.textContent = 'Escolha o jogador que pagou o reparo.'; return; }
       }
-      var pool = l.gross - (payer ? l.repair : 0) + state.carry;
-      var share = Math.floor(pool / act.length);
-      var carryBefore = state.carry;
-      state.carry = pool - share * act.length;
-      var ids = [], names = [];
-      act.forEach(function (m) { m.total += share; ids.push(m.id); names.push(m.name); });
-      var payerOwn = payer && ids.indexOf(payer.id) !== -1 ? Math.floor(l.repair / act.length) : 0;
-      if (payer) payer.total += l.repair;
-      else if (l.repair > 0) state.guildTotal += l.repair;
-      var entry = {
-        n: state.entries.length + 1, time: Date.now(), gross: l.gross, repair: l.repair,
-        payerType: l.repair > 0 ? type : null, payerId: payer ? payer.id : null, payerName: payer ? payer.name : null, payerOwn: payerOwn,
-        distributed: share * act.length + (payer ? l.repair : 0), share: share, count: act.length, ids: ids, names: names, carryBefore: carryBefore
-      };
+      var ids = act.map(function (m) { return m.id; }), names = act.map(function (m) { return m.name; });
+      var calc = calcSplit(ids, l.gross, l.repair, !!payer, state.carry, state.entries.length);
+      var carryBefore = state.carry; state.carry = 0;
+      var entry = buildEntry({ n: state.entries.length + 1, time: Date.now(), carryBefore: carryBefore, ids: ids, names: names }, l.gross, l.repair, type, payer, calc);
+      applyEntry(entry, 1);
       state.entries.push(entry);
       freshEntry = entry.n;
       $('amount').value = ''; $('repair').value = ''; $('amount').focus();
       save(); render(); showResult(entry);
-      toast('Dividido: ' + fmt(share) + ' para cada');
+      toast('Dividido: ' + fmt(entry.share) + ' para cada');
     });
 
-    $('undo').addEventListener('click', async function () {
-      var e = state.entries[state.entries.length - 1];
+    // ---------- Editar / desfazer movimentações ----------
+    function calcSplit(ids, gross, repair, byPlayer, carryIn, seed) {
+      var n = ids.length, pool = gross - (byPlayer ? repair : 0) + (carryIn || 0);
+      var share = Math.floor(pool / n), extra = pool - share * n;
+      return { share: share, extra: extra, extraId: extra > 0 ? ids[seed % n] : null };
+    }
+    function buildEntry(b, gross, repair, type, payer, calc) {
+      var n = b.ids.length, xi = calc.extraId == null ? -1 : b.ids.indexOf(calc.extraId);
+      return {
+        n: b.n, time: b.time, gross: gross, repair: repair,
+        payerType: repair > 0 ? type : null, payerId: payer ? payer.id : null, payerName: payer ? payer.name : null,
+        payerOwn: payer && b.ids.indexOf(payer.id) !== -1 ? Math.floor(repair / n) : 0,
+        distributed: calc.share * n + calc.extra + (payer ? repair : 0),
+        share: calc.share, count: n, ids: b.ids, names: b.names, carryBefore: b.carryBefore || 0,
+        extra: calc.extra, extraId: calc.extraId, extraName: xi >= 0 ? b.names[xi] : null
+      };
+    }
+    // sign = 1 aplica o loot nos saldos, sign = -1 tira
+    function applyEntry(e, sign) {
+      state.members.forEach(function (m) {
+        if (e.ids.indexOf(m.id) !== -1) m.total += sign * e.share;
+        if (e.extraId != null && m.id === e.extraId) m.total += sign * (e.extra || 0);
+        if (e.payerId != null && m.id === e.payerId) m.total += sign * e.repair;
+      });
+      if (e.payerType === 'guild' && e.repair > 0) state.guildTotal += sign * e.repair;
+    }
+    function removeEntryAt(idx) {
+      var e = state.entries[idx];
+      applyEntry(e, -1);
+      state.entries.splice(idx, 1);
+      state.entries.forEach(function (x, i) { x.n = i + 1; });
+      state.members.forEach(function (m) { if (m.since > idx) m.since -= 1; });
+      if (idx === state.entries.length) state.carry = e.carryBefore || 0;
+    }
+    function snapState() {
+      return JSON.parse(JSON.stringify({ members: state.members, entries: state.entries, donations: state.donations, carry: state.carry, guildTotal: state.guildTotal }));
+    }
+    // Aplica a mudança e volta tudo atrás se der erro ou se algum saldo ficar negativo. Devolve o texto do erro, ou ''.
+    function tryChange(fn) {
+      var snap = snapState(), before = {};
+      state.members.forEach(function (m) { before[m.id] = m.total; });
+      var err = '';
+      try { err = fn() || ''; } catch (ex) { err = 'Não foi possível aplicar a mudança.'; }
+      if (!err) {
+        var bad = state.members.filter(function (m) { return m.total < 0 && m.total < before[m.id]; })[0];
+        if (bad) err = bad.name + ' ficaria com saldo negativo. Mexa antes nas movimentações mais recentes que usam esse valor (doações, por exemplo).';
+      }
+      if (err) Object.assign(state, snap);
+      return err;
+    }
+    function blocked(text) { return openModal({ title: 'Não foi possível', text: text, ok: 'Entendi', hideCancel: true }); }
+
+    async function undoEntry(idx) {
+      var e = state.entries[idx];
       if (!e) return;
-      if (!(await ask('Desfazer o último loot?', 'O loot #' + e.n + ' (' + fmt(e.gross) + ') será removido e os saldos voltam ao que eram antes.', 'Desfazer', true))) return;
-      state.entries.pop();
-      state.members.forEach(function (m) { if (e.ids.indexOf(m.id) !== -1) m.total -= e.share; });
-      if (e.payerId) state.members.forEach(function (m) { if (m.id === e.payerId) m.total -= e.repair; });
-      else if (e.repair > 0 && e.payerType === 'guild') state.guildTotal -= e.repair;
-      state.carry = e.carryBefore;
+      var last = idx === state.entries.length - 1;
+      if (!(await ask('Desfazer o loot #' + e.n + '?', 'O loot de ' + fmt(e.gross) + ' será removido e os saldos voltam ao que eram antes.' + (last ? '' : ' Os outros loots não mudam, só são renumerados.'), 'Desfazer', true))) return;
+      var err = tryChange(function () { removeEntryAt(idx); });
+      if (err) { blocked(err); return; }
       $('result').hidden = true;
-      save(); render();
+      save(); render(); toast('Loot desfeito');
+    }
+
+    var editIdx = -1, emFocus = null;
+    function openEdit(idx) {
+      var e = state.entries[idx];
+      if (!e) return;
+      editIdx = idx; emFocus = document.activeElement;
+      $('emTitle').textContent = 'Editar loot #' + e.n;
+      $('eAmount').value = fmt(e.gross);
+      $('eRepair').value = e.repair ? fmt(e.repair) : '';
+      $('ePayerType').value = e.payerType === 'player' ? 'player' : 'guild';
+      var sel = $('ePayer'); sel.innerHTML = '';
+      state.members.forEach(function (m) {
+        var o = document.createElement('option'); o.value = m.id; o.textContent = m.name; sel.appendChild(o);
+      });
+      if (e.payerId != null) sel.value = e.payerId;
+      $('ePayerWrap').hidden = $('ePayerType').value !== 'player';
+      $('eHint').textContent = 'Continuam recebendo os mesmos ' + e.count + (e.count === 1 ? ' jogador' : ' jogadores') + ' deste loot.';
+      $('eMsg').textContent = '';
+      $('em').hidden = false;
+      setTimeout(function () { $('eAmount').focus(); $('eAmount').select(); }, 0);
+    }
+    function closeEdit() { $('em').hidden = true; if (emFocus && emFocus.focus) emFocus.focus(); }
+    $('emClose').addEventListener('click', closeEdit);
+    $('em').addEventListener('mousedown', function (ev) { if (ev.target === $('em')) closeEdit(); });
+    $('em').addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { ev.preventDefault(); closeEdit(); } });
+    $('ePayerType').addEventListener('change', function () { $('ePayerWrap').hidden = $('ePayerType').value !== 'player'; });
+    $('editForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var msg = $('eMsg'); msg.textContent = '';
+      var gross = parseSilver($('eAmount').value);
+      var rawR = $('eRepair').value.trim(), repair = rawR ? parseSilver(rawR) : 0;
+      var type = $('ePayerType').value;
+      if (isNaN(gross) || gross <= 0) { msg.textContent = 'Valor inválido. Use por exemplo 1.500.000, 1.5m, 250k ou 15m383k.'; return; }
+      if (isNaN(repair)) { msg.textContent = 'Valor do reparo inválido.'; return; }
+      var err = tryChange(function () {
+        var e = state.entries[editIdx];
+        var payer = repair > 0 && type === 'player' ? memberById($('ePayer').value) : null;
+        if (repair > 0 && type === 'player' && !payer) return 'Escolha o jogador que pagou o reparo.';
+        if (payer && repair > gross) return 'O reparo não pode ser maior que o loot.';
+        applyEntry(e, -1);
+        var ne = buildEntry(e, gross, repair, type, payer, calcSplit(e.ids, gross, repair, !!payer, e.carryBefore, editIdx));
+        applyEntry(ne, 1);
+        state.entries[editIdx] = ne;
+      });
+      if (err) { msg.textContent = err; return; }
+      freshEntry = state.entries[editIdx].n;
+      $('result').hidden = true;
+      save(); render(); closeEdit(); toast('Loot atualizado');
     });
 
     function copyText(text, okMsg) {
@@ -1051,6 +1229,7 @@
     function entryLines(e) {
         var own = e.payerOwn || 0;
         var lines = ['Dividido entre ' + e.count + (e.count === 1 ? ' jogador' : ' jogadores') + (e.names && e.names.length ? ': ' + e.names.join(', ') : '') + '.'];
+        if (e.extra > 0 && e.extraName) lines.push('Sobra de ' + fmt(e.extra) + ' foi para ' + e.extraName + '.');
         if (e.repair) {
           if (e.payerType === 'guild') lines.push('Reparo de ' + fmt(e.repair) + ' pago pela guilda, sem desconto dos membros.');
           else {
@@ -1063,141 +1242,89 @@
     }
 
     // ---------- Discord ----------
-    var WH_KEY = 'albion-discord-webhook';
-    var DEFAULT_WH = 'https://discord.com/api/webhooks/1572279617677561988/cCZn5fb97YfDyQlsqYcmYLedkjxqhJ0Z7oo57Ep2lLSE4OBOx9jZbAPgAw2APCyGEr-m';
-    var WH_RE = /^https:\/\/(?:(?:canary|ptb)\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+$/;
-    function getWH() { try { return localStorage.getItem(WH_KEY) || DEFAULT_WH; } catch (e) { return DEFAULT_WH; } }
-    function setWH(v) { try { if (v) localStorage.setItem(WH_KEY, v); else localStorage.removeItem(WH_KEY); } catch (e) {} }
+    var WEBHOOK = 'https://discord.com/api/webhooks/1572279617677561988/cCZn5fb97YfDyQlsqYcmYLedkjxqhJ0Z7oo57Ep2lLSE4OBOx9jZbAPgAw2APCyGEr-m';
+    var BRASS = 0xD3A84C;
     function dmsg(t) { $('dMsg').textContent = t || ''; }
-    function hhmm(t) { var d = new Date(t); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
-
-    // Monta mensagens com bloco de código (evita que _ e * dos nicks virem formatação) e respeita o limite de 2000 caracteres.
-    function discordPack(title, lines) {
-      var out = [], cur = [], len = 0, first = true;
-      function flush() { out.push((first ? title + '\n' : '') + '```\n' + cur.join('\n') + '\n```'); first = false; cur = []; len = 0; }
-      lines.forEach(function (l) {
-        l = String(l).slice(0, 1700);
-        if (len + l.length + 1 > 1700 && cur.length) flush();
-        cur.push(l); len += l.length + 1;
-      });
-      if (cur.length) flush();
-      return out;
-    }
-    function discordSummary(sp, i) {
-      var w = sp.members.reduce(function (a, m) { return Math.max(a, m.name.length); }, 0);
-      var lines = sp.members.map(function (m) { return (m.name + ':').padEnd(w + 1) + ' ' + fmt(m.total); });
-      if (!sp.members.length) lines.push('Sem jogadores');
-      if (sp.guildTotal) lines.push('Guilda (reparo): ' + fmt(sp.guildTotal));
-      lines.push('Total distribuído: ' + fmt(distOf(sp)));
-      return discordPack('**' + splitName(i) + ' • saldos**', lines);
-    }
-    function discordEntry(e) {
-      var lines = ['Total: ' + fmt(e.gross) + ' • Cada um: ' + fmt(e.share)].concat(entryLines(e));
-      return discordPack('**' + splitName(root.active) + ' • Loot #' + e.n + '** (' + hhmm(e.time) + ')', lines);
-    }
-
-    // Versões estilizadas (embeds) usadas no envio ao Discord
-    var BRASS = 0xD3A84C, GREEN = 0x57B77A, MEDALS = ['🥇', '🥈', '🥉'];
     function nameTag(n) { return '`' + String(n).replace(/`/g, "'") + '`'; }
     function embedFooter() { return { text: 'Loot Split • Albion Online' }; }
+    // Só entra quem tem saldo maior que zero. Sem ninguém com saldo, devolve lista vazia.
     function embedSummary(sp, i) {
-      var sorted = sp.members.slice().sort(function (a, b) { return b.total - a.total; });
-      var lines = sorted.map(function (m, k) {
-        return (k < 3 && m.total > 0 ? MEDALS[k] : '▫️') + ' ' + nameTag(m.name) + ' — **' + fmt(m.total) + '**';
-      });
-      if (!lines.length) lines.push('Sem jogadores');
+      var rows = sp.members.filter(function (m) { return m.total > 0; }).sort(function (a, b) { return b.total - a.total; });
+      if (!rows.length) return [];
+      var lines = rows.map(function (m) { return '▸ ' + nameTag(m.name) + ' — **' + fmt(m.total) + '**'; });
       var chunks = [], cur = [], len = 0;
       lines.forEach(function (l) {
         if (len + l.length + 1 > 3500 && cur.length) { chunks.push(cur); cur = []; len = 0; }
         cur.push(l); len += l.length + 1;
       });
       if (cur.length) chunks.push(cur);
+      var dist = distOf(sp);
       return chunks.map(function (c, k) {
         var emb = { title: '💰 ' + splitName(i) + ' • Saldos' + (k ? ' (cont.)' : ''), description: c.join('\n'), color: BRASS };
         if (k === chunks.length - 1) {
-          emb.fields = [
-            { name: '💎 Total distribuído', value: fmt(distOf(sp)), inline: true },
-            { name: '👥 Jogadores', value: String(sp.members.length), inline: true }
-          ];
-          if (sp.guildTotal) emb.fields.push({ name: '🏰 Guilda (reparo)', value: fmt(sp.guildTotal), inline: true });
+          emb.fields = [];
+          if (dist > 0) emb.fields.push({ name: '💎 Total distribuído', value: fmt(dist), inline: true });
+          emb.fields.push({ name: '👥 Jogadores', value: String(rows.length), inline: true });
+          if (sp.guildTotal > 0) emb.fields.push({ name: '🏰 Guilda (reparo)', value: fmt(sp.guildTotal), inline: true });
           emb.footer = embedFooter(); emb.timestamp = new Date().toISOString();
         }
         return { embeds: [emb] };
       });
     }
-    function embedEntry(e) {
-      var own = e.payerOwn || 0;
-      var fields = [
-        { name: '💎 Total do loot', value: fmt(e.gross), inline: true },
-        { name: '👥 Jogadores', value: String(e.count), inline: true },
-        { name: '🪙 Cada um recebe', value: fmt(e.share), inline: true }
-      ];
-      if (e.repair) {
-        if (e.payerType === 'guild') {
-          fields.push({ name: '🔧 Reparo', value: fmt(e.repair) + ' — pago pela **guilda**, sem desconto dos membros' });
-        } else {
-          fields.push({ name: '🔧 Reparo', value: fmt(e.repair) + ' — pago por ' + nameTag(e.payerName) + '\nCada um arca com **' + fmt(e.repair / e.count) + '**' });
-          fields.push({ name: '↩️ Reembolso', value: nameTag(e.payerName) + ' recebe **' + fmt(e.share + e.repair) + '**\n(loot ' + fmt(e.share + own) + ' + reembolso ' + fmt(e.repair - own) + ')' });
-        }
-      }
-      if (e.names && e.names.length) {
-        var txt = e.names.map(nameTag).join(' ');
-        if (txt.length > 1000) txt = txt.slice(0, 1000) + '…';
-        fields.push({ name: '🧑‍🤝‍🧑 Participantes', value: txt });
-      }
-      return [{ embeds: [{ title: '⚔️ Loot #' + e.n + ' • ' + splitName(root.active), color: GREEN, fields: fields, footer: embedFooter(), timestamp: new Date(e.time).toISOString() }] }];
-    }
 
     function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
-    async function postWH(url, payload) {
+    async function postWH(payload) {
       var opts = { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(Object.assign({ username: 'Loot Split', allowed_mentions: { parse: [] } }, payload)) };
-      var r = await fetch(url, opts);
+      var r = await fetch(WEBHOOK, opts);
       if (r.status === 429) {
         var j = {}; try { j = await r.json(); } catch (e) {}
         await sleep(((j.retry_after || 1) * 1000) + 150);
-        r = await fetch(url, opts);
+        r = await fetch(WEBHOOK, opts);
       }
       if (!r.ok) throw new Error('http ' + r.status);
     }
     async function sendDiscord(messages, okMsg) {
-      var url = getWH();
-      if (!WH_RE.test(url)) {
-        $('dCfg').open = true; dmsg('Configure o webhook do canal do Discord primeiro.');
-        $('dUrl').focus(); return;
-      }
+      if (!messages.length) { dmsg('Nada para enviar: todos os valores estão zerados.'); return; }
       dmsg('Enviando...');
       try {
-        for (var i = 0; i < messages.length; i++) { await postWH(url, messages[i]); if (i < messages.length - 1) await sleep(400); }
+        for (var i = 0; i < messages.length; i++) { await postWH(messages[i]); if (i < messages.length - 1) await sleep(400); }
         dmsg(''); toast(okMsg);
       } catch (e) {
-        dmsg('Não consegui enviar ao Discord (' + (e.message || 'erro') + '). Confira se o webhook ainda existe e a internet.');
+        dmsg('Não consegui enviar ao Discord (' + (e.message || 'erro') + '). Confira a internet e tente de novo.');
       }
     }
-
-    $('dCopy').addEventListener('click', function () {
-      copyText(discordSummary(state, root.active).join('\n'), 'Resumo para Discord copiado');
-    });
     $('dSend').addEventListener('click', function () {
-      sendDiscord(embedSummary(state, root.active), 'Resumo enviado ao Discord');
+      sendDiscord(embedSummary(state, root.active), splitName(root.active) + ' enviado ao Discord');
     });
     $('dSendAll').addEventListener('click', function () {
-      var msgs = []; root.splits.forEach(function (sp, i) { if (sp.members.length) msgs = msgs.concat(embedSummary(sp, i)); });
+      var msgs = []; root.splits.forEach(function (sp, i) { msgs = msgs.concat(embedSummary(sp, i)); });
       sendDiscord(msgs, 'Todos os splits enviados ao Discord');
     });
-    $('dSave').addEventListener('click', function () {
-      var v = $('dUrl').value.trim();
-      if (!WH_RE.test(v)) { dmsg('Essa URL não parece um webhook do Discord (https://discord.com/api/webhooks/...).'); return; }
-      setWH(v); $('dUrl').value = ''; $('dCfg').open = false; dmsg(''); toast('Webhook salvo');
+
+    // ---------- Popups de compartilhar e zerar ----------
+    var smFocus = null, zmFocus = null;
+    function openSM() { smFocus = document.activeElement; shareMsg(''); $('sm').hidden = false; setTimeout(function () { $('shareLink').focus(); }, 0); }
+    function closeSM() { $('sm').hidden = true; if (smFocus && smFocus.focus) smFocus.focus(); }
+    function openZM() {
+      zmFocus = document.activeElement;
+      $('zvDesc').textContent = 'Mantém os jogadores do ' + splitName(root.active) + '. Apaga saldos, histórico, doações e contadores.';
+      $('ztDesc').textContent = 'Apaga jogadores, valores e histórico do ' + splitName(root.active) + '.';
+      $('zm').hidden = false;
+      setTimeout(function () { $('zmClose').focus(); }, 0);
+    }
+    function closeZM() { $('zm').hidden = true; if (zmFocus && zmFocus.focus) zmFocus.focus(); }
+    [['sm', closeSM], ['zm', closeZM]].forEach(function (x) {
+      $(x[0]).addEventListener('mousedown', function (ev) { if (ev.target === $(x[0])) x[1](); });
+      $(x[0]).addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { ev.preventDefault(); x[1](); } });
     });
-    $('dTest').addEventListener('click', function () {
-      var typed = $('dUrl').value.trim();
-      if (typed) { if (!WH_RE.test(typed)) { dmsg('Essa URL não parece um webhook do Discord.'); return; } setWH(typed); $('dUrl').value = ''; }
-      sendDiscord([{ embeds: [{ title: '✅ Webhook conectado', description: 'Se você está vendo isso, o Loot Split consegue postar neste canal.', color: GREEN, footer: embedFooter(), timestamp: new Date().toISOString() }] }], 'Teste enviado');
-    });
-    $('dRemove').addEventListener('click', function () { setWH(''); $('dUrl').value = ''; dmsg(''); toast('Canal padrão restaurado'); });
+    $('openShare').addEventListener('click', openSM);
+    $('smClose').addEventListener('click', closeSM);
+    $('openReset').addEventListener('click', openZM);
+    $('zmClose').addEventListener('click', closeZM);
 
     $('resetValues').addEventListener('click', async function () {
+      closeZM();
       if (!(await ask('Zerar valores do ' + splitName(root.active) + '?', 'Os jogadores continuam na lista, mas saldos, histórico, sobra e contadores deste split voltam a zero. Não dá para desfazer.', 'Zerar valores', true))) return;
       state.members.forEach(function (m) { m.total = 0; m.since = 0; });
       state.entries = []; state.donations = []; state.carry = 0; state.guildTotal = 0;
@@ -1205,7 +1332,16 @@
       save(); render(); toast('Valores zerados');
     });
 
+    $('resetAll').addEventListener('click', async function () {
+      closeZM();
+      if (!(await ask('Zerar todos os splits?', 'Jogadores, valores e histórico dos ' + root.splits.length + ' splits serão apagados. Não dá para desfazer.', 'Zerar todos', true))) return;
+      root.splits = root.splits.map(blank); state = root.splits[root.active];
+      shown = {}; $('result').hidden = true;
+      save(); render(); toast('Todos os splits zerados');
+    });
+
     $('reset').addEventListener('click', async function () {
+      closeZM();
       if (!(await ask('Zerar tudo do ' + splitName(root.active) + '?', 'Jogadores, valores e histórico deste split serão apagados. Os outros splits não mudam. Não dá para desfazer.', 'Zerar tudo', true))) return;
       state = blank(); root.splits[root.active] = state;
       shown = {}; $('result').hidden = true;
@@ -1269,7 +1405,8 @@
           payerOwn: num(e.payerOwn), distributed: num(e.distributed), share: num(e.share), count: num(e.count),
           ids: Array.isArray(e.ids) ? e.ids.map(num) : [],
           names: Array.isArray(e.names) ? e.names.map(function (x) { return String(x).slice(0, 32); }) : [],
-          carryBefore: num(e.carryBefore)
+          carryBefore: num(e.carryBefore),
+          extra: num(e.extra), extraId: e.extraId == null ? null : num(e.extraId), extraName: e.extraName ? String(e.extraName).slice(0, 32) : null
         };
       });
       var maxId = members.reduce(function (a, m) { return Math.max(a, m.id); }, 0);
@@ -1303,7 +1440,7 @@
       save(); render();
       return true;
     }
-    function shareMsg(t) { $('shareMsg').textContent = t || ''; }
+    function shareMsg(t) { $('shareMsg').textContent = t || ''; if (t && $('sm').hidden) toast(t); }
 
     $('shareLink').addEventListener('click', async function () {
       shareMsg('');
@@ -1328,7 +1465,7 @@
       $('pm').hidden = true;
       if (pmFocus && pmFocus.focus) pmFocus.focus();
     }
-    $('pasteCode').addEventListener('click', function () { shareMsg(''); openPM(); });
+    $('pasteCode').addEventListener('click', function () { shareMsg(''); closeSM(); openPM(); });
     $('pmCancel').addEventListener('click', closePM);
     $('pm').addEventListener('mousedown', function (ev) { if (ev.target === $('pm')) closePM(); });
     $('pm').addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { ev.preventDefault(); closePM(); } });
