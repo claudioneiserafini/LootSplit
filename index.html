@@ -625,7 +625,16 @@
     var freshMember = null, freshEntry = null, freshDon = null, shown = {}, repairOpen = false, chestMode = false;
     try { chestMode = localStorage.getItem('albion-chest-mode') === '1'; } catch (e) {}
 
-    function blank() { return { members: [], entries: [], donations: [], carry: 0, guildTotal: 0, chest: 0, nextId: 1 }; }
+    function blank() { return { members: [], entries: [], donations: [], carry: 0, guildTotal: 0, chest: 0, chestV2: true, nextId: 1 }; }
+    // O baú acumula tudo o que foi adicionado: no modo normal soma o valor; no modo baú vale o total digitado.
+    function recalcChest(x) {
+      var c = 0;
+      x.entries.forEach(function (e) {
+        if (e.viaChest) c = e.chestTotal;
+        else { e.chestBefore = c; c += e.gross; e.chestTotal = c; }
+      });
+      x.chest = c;
+    }
     function fixSplit(x) {
       if (!x.guildTotal) x.guildTotal = 0;
       if (!x.chest) x.chest = 0;
@@ -634,6 +643,10 @@
       var seen = {};
       x.entries = (x.entries || []).filter(function (e) { var k = e.time + ':' + e.n; if (seen[k]) return false; seen[k] = 1; return true; });
       x.entries.forEach(function (e, i) { e.n = i + 1; });
+      if (!x.chestV2) {
+        x.entries.forEach(function (e) { if (e.chestTotal != null) e.viaChest = true; });
+        recalcChest(x); x.chestV2 = true;
+      }
       return x;
     }
     function load() {
@@ -848,7 +861,7 @@
       $('amount').placeholder = chestMode ? 'Total do baú, ex: 17m' : 'ex: 1.5m ou 15m383k';
       $('chestLine').hidden = !chestMode;
       $('chestInfo').textContent = state.chest
-        ? 'Baú anterior: ' + fmt(state.chest) + '. Digite o novo total: só a diferença é dividida.'
+        ? 'Baú anterior: ' + fmt(state.chest) + ' (inclui o que você já adicionou). Digite o novo total: só a diferença é dividida.'
         : 'Baú anterior: 0. Digite o total atual do baú: o primeiro valor é dividido inteiro.';
       var card = $('lootForm').closest('.card'); if (card) card.classList.toggle('bau-on', chestMode);
       $('splitTitle').textContent = chestMode ? 'Nova divisão · modo baú' : 'Nova divisão';
@@ -864,7 +877,7 @@
       var r = $('result'); r.innerHTML = '';
       r.appendChild(h('b', { text: 'Loot #' + e.n + ' dividido' }));
       r.appendChild(h('p', { text: 'Cada um dos ' + e.count + ' recebeu ' + fmt(e.share) + ' de prata.' }));
-      if (e.chestTotal != null) r.appendChild(h('p', { text: 'Baú: de ' + fmt(e.chestBefore) + ' para ' + fmt(e.chestTotal) + '.' }));
+      if (e.viaChest) r.appendChild(h('p', { text: 'Baú: de ' + fmt(e.chestBefore) + ' para ' + fmt(e.chestTotal) + '.' }));
       if (e.extra > 0 && e.extraName) r.appendChild(h('p', { text: 'A sobra de ' + fmt(e.extra) + ' foi para ' + e.extraName + '.' }));
       if (e.payerId) r.appendChild(h('p', { text: e.payerName + ' recebe ' + fmt(e.share + e.repair) + ' (inclui o reembolso do reparo).' }));
       else if (e.repair > 0) r.appendChild(h('p', { text: 'Reparo de ' + fmt(e.repair) + ' pago pela guilda.' }));
@@ -1124,10 +1137,10 @@
       var ids = act.map(function (m) { return m.id; }), names = act.map(function (m) { return m.name; });
       var calc = calcSplit(ids, l.gross, l.repair, !!payer, state.carry, state.entries.length);
       var carryBefore = state.carry; state.carry = 0;
-      var entry = buildEntry({ n: state.entries.length + 1, time: Date.now(), carryBefore: carryBefore, ids: ids, names: names, chestTotal: chestMode ? l.typed : null, chestBefore: state.chest }, l.gross, l.repair, type, payer, calc);
+      var entry = buildEntry({ n: state.entries.length + 1, time: Date.now(), carryBefore: carryBefore, ids: ids, names: names, chestTotal: chestMode ? l.typed : null, chestBefore: state.chest, viaChest: chestMode }, l.gross, l.repair, type, payer, calc);
       applyEntry(entry, 1);
       state.entries.push(entry);
-      if (chestMode) state.chest = l.typed;
+      recalcChest(state);
       freshEntry = entry.n;
       $('amount').value = ''; $('repair').value = ''; $('amount').focus();
       save(); render(); showResult(entry);
@@ -1148,7 +1161,7 @@
         payerOwn: payer && b.ids.indexOf(payer.id) !== -1 ? Math.floor(repair / n) : 0,
         distributed: calc.share * n + calc.extra + (payer ? repair : 0),
         share: calc.share, count: n, ids: b.ids, names: b.names, carryBefore: b.carryBefore || 0,
-        chestTotal: b.chestTotal == null ? null : b.chestTotal, chestBefore: b.chestBefore || 0,
+        chestTotal: b.chestTotal == null ? null : b.chestTotal, chestBefore: b.chestBefore || 0, viaChest: !!b.viaChest,
         extra: calc.extra, extraId: calc.extraId, extraName: xi >= 0 ? b.names[xi] : null
       };
     }
@@ -1164,10 +1177,10 @@
     function removeEntryAt(idx) {
       var e = state.entries[idx];
       applyEntry(e, -1);
-      if (e.chestTotal != null && state.chest === e.chestTotal) state.chest = e.chestBefore || 0;
       state.entries.splice(idx, 1);
       state.entries.forEach(function (x, i) { x.n = i + 1; });
       state.members.forEach(function (m) { if (m.since > idx) m.since -= 1; });
+      recalcChest(state);
       if (idx === state.entries.length) state.carry = e.carryBefore || 0;
     }
     function snapState() {
@@ -1239,9 +1252,10 @@
         if (payer && repair > gross) return 'O reparo não pode ser maior que o loot.';
         applyEntry(e, -1);
         var ne = buildEntry(e, gross, repair, type, payer, calcSplit(e.ids, gross, repair, !!payer, e.carryBefore, editIdx));
-        if (e.chestTotal != null) { ne.chestTotal = (e.chestBefore || 0) + gross; if (state.chest === e.chestTotal) state.chest = ne.chestTotal; }
+        if (e.viaChest) ne.chestTotal = (e.chestBefore || 0) + gross;
         applyEntry(ne, 1);
         state.entries[editIdx] = ne;
+        recalcChest(state);
       });
       if (err) { msg.textContent = err; return; }
       freshEntry = state.entries[editIdx].n;
@@ -1276,7 +1290,7 @@
     function entryLines(e) {
         var own = e.payerOwn || 0;
         var lines = ['Dividido entre ' + e.count + (e.count === 1 ? ' jogador' : ' jogadores') + (e.names && e.names.length ? ': ' + e.names.join(', ') : '') + '.'];
-        if (e.chestTotal != null) lines.push('Baú: ' + fmt(e.chestTotal) + ' (antes ' + fmt(e.chestBefore) + ').');
+        if (e.viaChest) lines.push('Baú: ' + fmt(e.chestTotal) + ' (antes ' + fmt(e.chestBefore) + ').');
         if (e.extra > 0 && e.extraName) lines.push('Sobra de ' + fmt(e.extra) + ' foi para ' + e.extraName + '.');
         if (e.repair) {
           if (e.payerType === 'guild') lines.push('Reparo de ' + fmt(e.repair) + ' pago pela guilda, sem desconto dos membros.');
@@ -1454,7 +1468,7 @@
           ids: Array.isArray(e.ids) ? e.ids.map(num) : [],
           names: Array.isArray(e.names) ? e.names.map(function (x) { return String(x).slice(0, 32); }) : [],
           carryBefore: num(e.carryBefore),
-          chestTotal: e.chestTotal == null ? null : num(e.chestTotal), chestBefore: num(e.chestBefore),
+          chestTotal: e.chestTotal == null ? null : num(e.chestTotal), chestBefore: num(e.chestBefore), viaChest: !!e.chestTotal && !!e.viaChest,
           extra: num(e.extra), extraId: e.extraId == null ? null : num(e.extraId), extraName: e.extraName ? String(e.extraName).slice(0, 32) : null
         };
       });
@@ -1463,15 +1477,15 @@
         return { time: num(d.time), fromId: num(d.fromId), fromName: String(d.fromName || '').slice(0, 32),
           toId: num(d.toId), toName: String(d.toName || '').slice(0, 32), amount: num(d.amount) };
       });
-      return { members: members, entries: entries, donations: donations, carry: num(o.carry), guildTotal: num(o.guildTotal), chest: num(o.chest), nextId: Math.max(num(o.nextId), maxId + 1) };
+      return { members: members, entries: entries, donations: donations, carry: num(o.carry), guildTotal: num(o.guildTotal), chest: num(o.chest), chestV2: !!o.chestV2, nextId: Math.max(num(o.nextId), maxId + 1) };
     }
     function sanitizeRoot(o) {
       if (o && Array.isArray(o.splits)) {
-        var sp = o.splits.slice(0, MAX).map(sanitizeSplit);
+        var sp = o.splits.slice(0, MAX).map(sanitizeSplit).map(fixSplit);
         while (sp.length < MIN) sp.push(blank());
         return { splits: sp, active: Math.min(Math.max(Math.floor(Number(o.active)) || 0, 0), sp.length - 1) };
       }
-      return { splits: [sanitizeSplit(o), blank(), blank()], active: 0 };
+      return { splits: [fixSplit(sanitizeSplit(o)), blank(), blank()], active: 0 };
     }
     function countAll(r) {
       var m = 0, e = 0;
